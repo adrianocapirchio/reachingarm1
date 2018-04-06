@@ -162,7 +162,7 @@ def rotationVector(R):
 
 
 
-def linearityIndex(path, endPos, goalRange, prvGoalPos):
+def linearityIndex(path, endPos, goalRange):
     
     pathx = np.trim_zeros(path[0,:], 'b')
     pathy = np.trim_zeros(path[1,:], 'b')
@@ -207,7 +207,7 @@ def asimmetryIndex(velPath):
     velPath = np.trim_zeros(velPath, 'b')
     
     prePeak = np.argmax(velPath)
-    print prePeak
+ #   print prePeak
     
     postPeak = len(velPath[prePeak:])
     

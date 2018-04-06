@@ -30,7 +30,7 @@ elbowRange = np.array([0.0, np.pi])
 
 TRAINING = True
 GANGLIA_NOISE = True
-gangliaTime = 13
+gangliaTime = 4
 perfBuff = 10
 
 
@@ -38,7 +38,7 @@ perfBuff = 10
 
 
 
-MULTINET = False
+MULTINET = True
 
 
 
@@ -60,7 +60,7 @@ else:
 
 
 Kp = 6.0
-Kd = 1.0
+Kd = 1.2
 
 
 
@@ -107,12 +107,12 @@ goalRange = 0.02
 
 maxSeed = 1
 maxEpoch = 1500
-maxStep = 100
+maxStep = 150
 
 
 
-startPlotting = 1400
-startAtaxia = 1605
+startPlotting = 1050
+startAtaxia = 1405
 
 
 
@@ -153,6 +153,9 @@ if __name__ == "__main__":
     for seed in xrange(maxSeed):
         
         CEREBELLUM_DAMAGE = False
+        
+        
+        
         
         game = armReaching6targets()
         game.init(maxStep, maxEpoch)
@@ -215,8 +218,10 @@ if __name__ == "__main__":
         
         for epoch in xrange(maxEpoch):
             
+         #   print CEREBELLUM_DAMAGE
+            
             if CEREBELLUM == True:
-                if epoch > startAtaxia:
+                if epoch >= startAtaxia:
                     CEREBELLUM_DAMAGE = True
             
             time = 0
@@ -346,7 +351,7 @@ if __name__ == "__main__":
                 
         
             if epoch >= startPlotting:
-                text1.set_text("epoch = %s" % (epoch +1))
+                text1.set_text("epoch = %s" % (epoch ))
                 point.set_data([arm.xEndEf], [arm.yEndEf]) 
                 line1.set_data([0, arm.xElbow, arm.xEndEf], [0, arm.yElbow, arm.yEndEf])
             
@@ -363,7 +368,11 @@ if __name__ == "__main__":
             
             for trial in xrange(game.maxTrial):
                 
+              #  print arm.theta1, arm.theta2
                 
+           #     
+           #     if epoch >= startAtaxia +1:
+           #         arm.setEffPosition(game.prvGoalPos)
                 
               #  time = 0
 
@@ -399,6 +408,9 @@ if __name__ == "__main__":
 
             #    reachType = 0
                # print reachType
+               
+       #         if CEREBELLUM_DAMAGE == True:
+       #             game.prvGoalPos = game.goalPos.copy()
 
                 
                 game.setGoal(trial)
@@ -469,7 +481,7 @@ if __name__ == "__main__":
             
                 if epoch >= startPlotting:  
                 
-                    text2.set_text("trial = %s" % (trial +1))
+                    text2.set_text("trial = %s" % (trial ))
                # text4.set_text("reward = %s" % (bg.rewardCounter[game.goalIdx]))
                     rewardCircle.remove()
                     rewardCircle = plt.Circle((game.goalPos), goalRange, color = 'red') 
@@ -499,6 +511,33 @@ if __name__ == "__main__":
                     game.prvPos = game.currPos.copy()
                     game.prvVel = game.currVel.copy()
                     game.prvAcc = game.currAcc.copy()
+                    
+                    
+                    if saveData == True:
+                        
+                        game.goalPositionHistory[:,trial,epoch] = game.goalPos.copy() 
+                        
+                        if game.goalIdx == 0:
+                            game.goalAnglesHistory[:,step,trial,epoch] = np.array([0.434362144081, 2.4949209732])
+                        elif game.goalIdx == 4:
+                            game.goalAnglesHistory[:,step,trial,epoch] = np.array([0.519484783049, 1.52744676667])
+                        elif game.goalIdx == 5:
+                            game.goalAnglesHistory[:,step,trial,epoch] = np.array([1.3447281182, 1.29739798815])
+                        elif game.goalIdx == 3:
+                            game.goalAnglesHistory[:,step,trial,epoch] = np.array([0.870609130687, 1.55174490219])
+                            
+                            
+                        game.trialTrajectories[:,step,trial,epoch] = game.currPos.copy()
+                        game.trialArmAngles[:,step,trial,epoch] = np.array([arm.theta1,arm.theta2])
+                        game.trialGangliaAngles[:,step,trial,epoch]  = gangliaDesAng.copy()
+                        
+                        if CEREBELLUM == True:
+                            game.trialCerebAngles[:,step,trial,epoch] = cerebDesAng.copy() 
+                        
+                        
+                        game.trialVelocity[step,trial,epoch] = game.currVel.copy()
+                        game.trialAccelleration[step,trial,epoch] = game.currAcc.copy()
+                        game.trialJerk[step,trial,epoch] = game.currJerk.copy()
                     
                     
 
@@ -579,7 +618,7 @@ if __name__ == "__main__":
                                     
                     if epoch >= startPlotting:  
                         
-                        text3.set_text("step = %s" % (step +1))
+                        text3.set_text("step = %s" % (step))
                         text4.set_text("reward =%s" % (bg.rewardCounter[game.goalIdx]))
                         line1.set_data([0, arm.xElbow, arm.xEndEf], [0, arm.yElbow, arm.yEndEf])
                         point.set_data([arm.xEndEf], [arm.yEndEf]) 
@@ -605,12 +644,19 @@ if __name__ == "__main__":
 
                         
                         if CEREBELLUM == True:
-                            cerebDesAng[0] = utils.changeRange(cb.currOut[0], 0.,1.,shoulderRange[0],shoulderRange[1])
-                            cerebDesAng[1] = utils.changeRange(cb.currOut[1], 0.,1., elbowRange[0],elbowRange[1])
-                            xCerebDes = arm.L1*np.cos(cerebDesAng[0]) + arm.L2*np.cos(cerebDesAng[0]+cerebDesAng[1])
-                            yCerebDes = arm.L1*np.sin(cerebDesAng[0]) + arm.L2*np.sin(cerebDesAng[0]+cerebDesAng[1])
-                            cerebOut.set_data([xCerebDes], [yCerebDes])
-                                                
+                            if CEREBELLUM_DAMAGE == False:
+                                cerebDesAng[0] = utils.changeRange(cb.currOut[0], 0.,1.,shoulderRange[0],shoulderRange[1])
+                                cerebDesAng[1] = utils.changeRange(cb.currOut[1], 0.,1., elbowRange[0],elbowRange[1])
+                                xCerebDes = arm.L1*np.cos(cerebDesAng[0]) + arm.L2*np.cos(cerebDesAng[0]+cerebDesAng[1])
+                                yCerebDes = arm.L1*np.sin(cerebDesAng[0]) + arm.L2*np.sin(cerebDesAng[0]+cerebDesAng[1])
+                                cerebOut.set_data([xCerebDes], [yCerebDes])
+                            else:
+                                cerebDesAng[0] = utils.changeRange(cb.currOut[0] * (1.- damageMag), 0.,1.,shoulderRange[0],shoulderRange[1])
+                                cerebDesAng[1] = utils.changeRange(cb.currOut[1] * (1.- damageMag), 0.,1., elbowRange[0],elbowRange[1])
+                                xCerebDes = arm.L1*np.cos(cerebDesAng[0]) + arm.L2*np.cos(cerebDesAng[0]+cerebDesAng[1])
+                                yCerebDes = arm.L1*np.sin(cerebDesAng[0]) + arm.L2*np.sin(cerebDesAng[0]+cerebDesAng[1])
+                                cerebOut.set_data([xCerebDes], [yCerebDes])
+                                
                         plt.pause(0.01) 
                         
 
@@ -695,7 +741,7 @@ if __name__ == "__main__":
                    #  #☺   bg.spreadCrit()                            
                    #         bg.currCritOut = np.zeros(1)
                    #     else:
-                        if step>20:
+                        if step>30:
                             bg.actRew = 1                          
                             bg.currCritOut = np.zeros(1)
                     
@@ -763,7 +809,8 @@ if __name__ == "__main__":
                         if time % gangliaTime == 0:
                             bg.spreadAct()       
                             if GANGLIA_NOISE== True:
-                                bg.noise(T)
+                                if epoch < 1400:
+                                    bg.noise(T)
 
                         if time % cerebellumTime == 0:        
                             cb.spreading(bg.biasedState) 
@@ -785,7 +832,8 @@ if __name__ == "__main__":
                         if time % gangliaTime == 0:
                             bg.spreadAct()
                             if GANGLIA_NOISE== True:
-                                bg.noise(T)  
+                                if epoch < 1400:
+                                    bg.noise(T)
                             
                      #   print bg.currNoise    
                         netOut = K * bg.currActOut
@@ -871,20 +919,14 @@ if __name__ == "__main__":
                     time += 1
                 
                 
-                    if saveData == True:
-                        
-                        game.goalPositionHistory[:,trial,epoch] = game.goalPos.copy()                       
-                        game.trialTrajectories[:,step,trial,epoch] = game.currPos.copy()
-                        game.trialVelocity[step,trial,epoch] = game.currVel.copy()
-                        game.trialAccelleration[step,trial,epoch] = game.currAcc.copy()
-                        game.trialJerk[step,trial,epoch] = game.currJerk.copy()
+                    
 
                 
                     if bg.actRew == 1:
                         epochAccurancy[trial%game.maxTrial] = 1.
                         epochGoalTime[trial%game.maxTrial] = step +1. 
                         bg.performance[epoch%perfBuff,game.goalIdx] = 1.
-                        print game.goalIdx, game.goalPos, step
+                        print game.goalIdx, game.goalPos, step #, arm.theta1, arm.theta2
                         bg.rewardCounter[game.goalIdx] +=1
                         break
                 
@@ -899,7 +941,7 @@ if __name__ == "__main__":
             epochAvgAcc  = (float(np.sum(epochAccurancy)) / game.maxTrial) * 100
             epochAvgTime = (float(np.sum(epochGoalTime)) / game.maxTrial)
         
-            print "epoch" , epoch, "avarage steps", round(epochAvgTime,2)  , "accurancy" , round(epochAvgAcc,2), "%"
+            print "epoch" , epoch, "avarage steps", round(epochAvgTime,2)  , "accurancy" , round(epochAvgAcc,2), "%", "seed", seed
         
             avg5EpochAcc[epoch%avgStats] = epochAvgAcc
             avg5EpochTime[epoch%avgStats] = epochAvgTime
@@ -925,7 +967,7 @@ if __name__ == "__main__":
         plt.figure(figsize=(120, 4), num=3, dpi=160)
         plt.title('average time in 10 epoch')
         plt.xlim([0, maxEpoch/avgStats])
-        plt.ylim([0, 100])
+        plt.ylim([0, 150])
         plt.xlabel("epochs")
         plt.ylabel("s")
         plt.xticks(np.arange(0,maxEpoch/avgStats, 10))
@@ -962,50 +1004,61 @@ if __name__ == "__main__":
         
         
         
-    if saveData == True:
-        mydir = os.getcwd
-               
-        if CEREBELLUM == True:
-            
-            
-            if INTRALAMINAR_NUCLEI == True:    
+        if saveData == True:
+            mydir = os.getcwd
+                   
+            if CEREBELLUM == True:
                 
-                if not os.path.exists("C:\Users/Alex/Desktop/targets6/data/intralaminarNuclei/actETA1=%s_actETA2=%s_critETA=%s_cbETA=%s/" % (bg.ACT_ETA1,bg.ACT_ETA2,bg.CRIT_ETA,cb.cbETA)):
-                    os.makedirs("C:\Users/Alex/Desktop/targets6/data/intralaminarNuclei/actETA1=%s_actETA2=%s_critETA=%s_cbETA=%s/" % (bg.ACT_ETA1,bg.ACT_ETA2,bg.CRIT_ETA,cb.cbETA))
-                os.chdir("C:\Users/Alex/Desktop/targets6/data/intralaminarNuclei/actETA1=%s_actETA2=%s_critETA=%s_cbETA=%s/" % (bg.ACT_ETA1,bg.ACT_ETA2,bg.CRIT_ETA,cb.cbETA))
                 
-            
+                if INTRALAMINAR_NUCLEI == True:    
+                    
+                    if not os.path.exists("C:\Users/Alex/Desktop/targets6/data/intralaminarNuclei/actETA1=%s_actETA2=%s_critETA=%s_cbETA=%s/" % (bg.ACT_ETA1,bg.ACT_ETA2,bg.CRIT_ETA,cb.cbETA)):
+                        os.makedirs("C:\Users/Alex/Desktop/targets6/data/intralaminarNuclei/actETA1=%s_actETA2=%s_critETA=%s_cbETA=%s/" % (bg.ACT_ETA1,bg.ACT_ETA2,bg.CRIT_ETA,cb.cbETA))
+                    os.chdir("C:\Users/Alex/Desktop/targets6/data/intralaminarNuclei/actETA1=%s_actETA2=%s_critETA=%s_cbETA=%s/" % (bg.ACT_ETA1,bg.ACT_ETA2,bg.CRIT_ETA,cb.cbETA))
+                    
+                
+                else:
+                    if not os.path.exists("C:\Users/Alex/Desktop/targets6/data/onlyCerebellum/actETA1=%s_critETA=%s_cbETA=%s/" % (bg.ACT_ETA1,bg.CRIT_ETA,cb.cbETA)):
+                        os.makedirs("C:\Users/Alex/Desktop/targets6/data/onlyCerebellum/actETA1=%s_critETA=%s_cbETA=%s/" % (bg.ACT_ETA1,bg.CRIT_ETA,cb.cbETA))
+                    os.chdir("C:\Users/Alex/Desktop/targets6/data/onlyCerebellum/actETA1=%s_critETA=%s_cbETA=%s/" % (bg.ACT_ETA1,bg.CRIT_ETA,cb.cbETA))
+                
+                
+                if CEREBELLUM_DAMAGE == True:
+                    if not os.path.exists(os.curdir + "/cerebellumDamage=" + str(damageMag)):
+                        os.makedirs(os.curdir + "/cerebellumDamage=" + str(damageMag))
+                    os.chdir(os.curdir + "/cerebellumDamage=" + str(damageMag))
+                
+                
+                np.save("cerebellumWeights_seed=%s" % (seed), (cb.w))
+                np.save("gameTrialCerebAngles_seed=%s" % (seed), game.trialCerebAngles)
+                
+                
             else:
-                if not os.path.exists("C:\Users/Alex/Desktop/targets6/data/onlyCerebellum/actETA1=%s_critETA=%s_cbETA=%s/" % (bg.ACT_ETA1,bg.CRIT_ETA,cb.cbETA)):
-                    os.makedirs("C:\Users/Alex/Desktop/targets6/data/onlyCerebellum/actETA1=%s_critETA=%s_cbETA=%s/" % (bg.ACT_ETA1,bg.CRIT_ETA,cb.cbETA))
-                os.chdir("C:\Users/Alex/Desktop/targets6/data/onlyCerebellum/actETA1=%s_critETA=%s_cbETA=%s/" % (bg.ACT_ETA1,bg.CRIT_ETA,cb.cbETA))
+                if not os.path.exists("C:\Users/Alex/Desktop/targets6/data/onlyGanglia/actETA1=%s_critETA=%s/" % (bg.ACT_ETA1,bg.CRIT_ETA)):
+                    os.makedirs("C:\Users/Alex/Desktop/targets6/data/onlyGanglia/actETA1=%s_critETA=%s/" % (bg.ACT_ETA1,bg.CRIT_ETA))
+                os.chdir("C:\Users/Alex/Desktop/targets6/data/onlyGanglia/actETA1=%s_critETA=%s/" % (bg.ACT_ETA1,bg.CRIT_ETA))
             
             
-        #    if CEREBELLUM_DAMAGE == True:
-        #        if not os.path.exists(os.chdir + "/cerebellumDamage=" + str(damageMag)):
-        #            os.makedirs(os.chdir + "/cerebellumDamage=" + str(damageMag))
-        #        os.chdir(os.chdir + "/cerebellumDamage=" + str(damageMag))
             
-            
-            np.save("cerebellumWeights_seed=%s" % (seed), (cb.w))
-            
-            
-        else:
-            if not os.path.exists("C:\Users/Alex/Desktop/targets6/data/onlyGanglia/actETA1=%s_critETA=%s/" % (bg.ACT_ETA1,bg.CRIT_ETA)):
-                os.makedirs("C:\Users/Alex/Desktop/targets6/data/onlyGanglia/actETA1=%s_critETA=%s/" % (bg.ACT_ETA1,bg.CRIT_ETA))
-            os.chdir("C:\Users/Alex/Desktop/targets6/data/onlyGanglia/actETA1=%s_critETA=%s/" % (bg.ACT_ETA1,bg.CRIT_ETA))
+            np.save("actorWeights_seed=%s" % (seed), (bg.actW))
+            np.save("criticWeights_seed=%s" % (seed), (bg.critW))
         
         
+            np.save("goalPositionHistory_seed=%s" % (seed), game.goalPositionHistory)
+            np.save("goalAnglesHistory_seed=%s" % (seed), game.goalAnglesHistory)
+            
+            
+            
+            np.save("gameTrajectories_seed=%s" % (seed), game.trialTrajectories)
+            np.save("gameTrialArmAngles_seed=%s" % (seed), game.trialArmAngles)
+            np.save("gameTrialGangliaAngles_seed=%s" % (seed), game.trialGangliaAngles)
+            
+            
+            np.save("gameVelocity_seed=%s" % (seed), game.trialVelocity)
+            np.save("gameAccelleration_seed=%s" % (seed), game.trialAccelleration)
+            np.save("gameJerk_seed=%s" % (seed), game.trialJerk)
         
-        np.save("actorWeights_seed=%s" % (seed), (bg.actW))
-        np.save("criticWeights_seed=%s" % (seed), (bg.critW))
-    
-    
-        np.save("goalPositionHistory_seed=%s" % (seed), game.goalPositionHistory)
-        np.save("gameTrajectories_seed=%s" % (seed), game.trialTrajectories)
-        np.save("gameVelocity_seed=%s" % (seed), game.trialVelocity)
-        np.save("gameAccelleration_seed=%s" % (seed), game.trialAccelleration)
-        np.save("gameJerk_seed=%s" % (seed), game.trialJerk)
+        #os.close(os.curdir)
  
                 
                 

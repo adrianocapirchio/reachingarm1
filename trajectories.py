@@ -14,23 +14,23 @@ import utilities as utils
 from arm import Arm
 from games import armReaching6targets
 
-shoulderRange = np.array([-0.5, np.pi])
+shoulderRange = np.array([-0.7, np.pi])
 elbowRange = np.array([0.0, np.pi ] )
 
 
-CEREBELLUM = False
-INTRALAMINAR_NUCLEI = False
+CEREBELLUM = True
+INTRALAMINAR_NUCLEI = True
 
-ATAXIA = False
+ATAXIA = True
 damageMag = 0.1
 
 
 
 
-actETA1 = 1. * 10 ** ( -1)
-actETA2 = 1. * 10 ** (- 5)
-critETA = 1. * 10 ** ( -3)
-cbETA   = 1. * 10 ** ( -1)
+actETA1 = 0.2 * 10 ** ( -1)
+actETA2 = 1. * 10 ** (- 6)
+critETA = 1. * 10 ** ( -4)
+cbETA   = 0.2 * 10 ** ( -1)
 
 
 
@@ -40,8 +40,8 @@ goalRange = 0.02
 
 seed = 0
 maxEpoch = 1500
-maxStep = 100
-startPlotting= 1000
+maxStep = 150
+startPlotting= 1395
 
 mydir = os.getcwd
 
@@ -56,7 +56,7 @@ if CEREBELLUM == True:
         os.chdir("C:\Users/Alex/Desktop/targets6/data/onlyCerebellum/actETA1=%s_critETA=%s_cbETA=%s/" % (actETA1,critETA,cbETA))
     
     if ATAXIA == True:
-        os.chdir(os.chdir + "/cerebellumDamage=" + str(damageMag))
+        os.chdir(os.curdir + "/cerebellumDamage=" + str(damageMag) + "/")
         
             
 else:
@@ -68,7 +68,14 @@ gameGoalPos = np.zeros(2)
 
 
 trajectories              = np.load("gameTrajectories_seed=%s.npy" %(seed))
+armAngles                 = np.load("gameTrialArmAngles_seed=%s.npy" % (seed))
+gangliaAngles             = np.load("gameTrialGangliaAngles_seed=%s.npy" % (seed))
+
+if CEREBELLUM == True:
+    cerebAngles           = np.load("gameTrialCerebAngles_seed=%s.npy" %(seed)) 
+
 goalPosition              = np.load("goalPositionHistory_seed=%s.npy" %(seed))
+goalAngles                = np.load("goalAnglesHistory_seed=%s.npy" %(seed))
 velocity                  = np.load("gameVelocity_seed=%s.npy" %(seed) )
 accelleration             = np.load("gameAccelleration_seed=%s.npy" %(seed))
 jerk                      = np.load("gameJerk_seed=%s.npy" %(seed))
@@ -110,8 +117,8 @@ if __name__ == "__main__":
        
             
             
-            ax1.set_xlim([-0.4,0.1])
-            ax1.set_ylim( [0.1,0.5])
+            ax1.set_xlim([-0.75,0.75])
+            ax1.set_ylim([-0.5,0.75])
             
             circle1 = plt.Circle((game.goalList[0]), goalRange, color = 'yellow') 
             edgecircle1 = plt.Circle((game.goalList[0]), goalRange, color = 'black', fill = False) 
@@ -155,22 +162,40 @@ if __name__ == "__main__":
             ax3.set_yticks(np.arange(0, 2., 0.5))
             ax3.set_xticks(np.arange(0, 100, 10))
             title3 = plt.figtext(.79, 0.90, "VELOCITY" , style='normal', bbox={'facecolor':'orangered'})
-            text5 = plt.figtext(.76, .75, "asimmetry index = %s" % (0), style='italic', bbox={'facecolor':'lightblue'})
+            text5 = plt.figtext(.74, .75, "asimmetry index = %s" % (0), style='italic', bbox={'facecolor':'lightblue'})
             
             
             
-            ax4 =  fig1.add_subplot(gs[2:3, 6:8])
+        #    ax4 =  fig1.add_subplot(gs[2:3, 6:8])
          #   ax4.set_ylim([0,4])
-            ax4.set_xlim([0,100])
-            ax4.set_xticks(np.arange(0, 100, 10))
-            title4 = plt.figtext(.767, .70, "ACCELLERATION" , style='normal', bbox={'facecolor':'orangered'})
+        #    ax4.set_xlim([0,100])
+       #     ax4.set_xticks(np.arange(0, 100, 10))
+        #    title4 = plt.figtext(.767, .70, "ACCELLERATION" , style='normal', bbox={'facecolor':'orangered'})
       
             
-            ax5 =  fig1.add_subplot(gs[4:5, 6:8])
+            ax5 =  fig1.add_subplot(gs[2:3, 6:8])
+            ax5.set_ylim([-2000,2000])
             ax5.set_xlim([0,100])
+            ax5.set_yticks(np.arange(-2000, 2000, 1000))
+            ax5.set_xticks(np.arange(0, 100, 10))
             
-            title5 = plt.figtext(.8, .50, "JERK" , style='normal', bbox={'facecolor':'orangered'})
-            text4 = plt.figtext(.76, .35, "smoothness index = %s" % (0), style='italic', bbox={'facecolor':'lightblue'})
+            title5 = plt.figtext(.8, .70, "JERK" , style='normal', bbox={'facecolor':'orangered'})
+            text4 = plt.figtext(.72, .55, "smoothness index = %s" % (0), style='italic', bbox={'facecolor':'lightblue'})
+            
+            ax6 =fig1.add_subplot(gs[5:6, 6:8])
+            ax6.set_xlim([0,100])
+            ax6.set_xticks(np.arange(0, 100, 10))
+            ax6.set_ylim([-np.pi, np.pi])
+            
+            title6 = plt.figtext(.76, .41, "SHOULDER ANGLE" , style='normal', bbox={'facecolor':'orangered'})
+            
+            ax7 =fig1.add_subplot(gs[7:8, 6:8])
+            ax7.set_xlim([0,100])
+            ax7.set_xticks(np.arange(0, 100, 10))
+            ax7.set_ylim([-np.pi, np.pi])
+            
+            title7 = plt.figtext(.77, .21, "ELBOW ANGLE" , style='normal', bbox={'facecolor':'orangered'})
+            
        
             
             
@@ -186,14 +211,23 @@ if __name__ == "__main__":
             
           #  print trial
             
-            prvGoalPos = gameGoalPos.copy()
+
             gameGoalPos = goalPosition[:,trial,epoch].copy()
+            
+            
+            trialArmAngles = armAngles[:,:,trial,epoch].copy()
+            trialGoalAngles = goalAngles[:,:,trial,epoch].copy()
+            trialGangliaAngles = gangliaAngles[:,:,trial,epoch].copy()
+            
+            if CEREBELLUM == True:
+                trialCerebAngles = cerebAngles[:,:,trial,epoch].copy()
+            
             trialTraj = trajectories[:,:,trial,epoch].copy()
             trialVelocity = velocity[:,trial,epoch].copy()
             trialAccelleration = accelleration[:,trial,epoch].copy()
             trialJerk = jerk[:,trial,epoch].copy()
             
-            linearityIndex = utils.linearityIndex(trialTraj, gameGoalPos, goalRange, prvGoalPos)
+            linearityIndex = utils.linearityIndex(trialTraj, gameGoalPos, goalRange)
             smoothnessIndex = utils.smoothnessIndex(trialJerk)
             asimmetryIndex = utils.asimmetryIndex(trialVelocity)
                 
@@ -207,8 +241,8 @@ if __name__ == "__main__":
                 text5.set_text("asimmetry index = %s" % (asimmetryIndex))
                 
                 ax1.cla()
-                ax1.set_xlim([-0.4,0.1])
-                ax1.set_ylim([ 0.1,0.5])
+                ax1.set_xlim([-0.75,0.75])
+                ax1.set_ylim([-0.5,0.75])
                 
                 circle1 = plt.Circle((game.goalList[0]), goalRange, color = 'yellow') 
                 edgecircle1 = plt.Circle((game.goalList[0]), goalRange, color = 'black', fill = False) 
@@ -250,8 +284,24 @@ if __name__ == "__main__":
             
                    
                 linearVelocityPlot, = ax3.plot(np.trim_zeros(trialVelocity,'b'), color='blue')
-                linearAccellerationyPlot, = ax4.plot(np.trim_zeros(trialAccelleration, 'b'), color='blue')
+             #   linearAccellerationyPlot, = ax4.plot(np.trim_zeros(trialAccelleration, 'b'), color='blue')
                 linearJerkPlot, = ax5.plot(np.trim_zeros(trialJerk, 'b'), color='blue')
+                
+                
+                
+                desiredShoulderAngle, = ax6.plot(np.trim_zeros(trialGoalAngles[0], 'b'), color='red')
+                shoulderGangliaAngle, = ax6.plot(np.trim_zeros(trialGangliaAngles[0], 'b'), color='blue')
+                currShoulderAngle, = ax6.plot(np.trim_zeros(trialArmAngles[0], 'b'), color='black')
+                
+                desiredElbowAngle, = ax7.plot(np.trim_zeros(trialGoalAngles[1], 'b'), color='red')
+                elbowGangliaAngle = ax7.plot(np.trim_zeros(trialGangliaAngles[1], 'b'), color='blue')
+                currElbowAngle, = ax7.plot(np.trim_zeros(trialArmAngles[1], 'b'), color='black')
+                
+                if CEREBELLUM == True:
+                    shoulderCerebAngle, = ax6.plot(np.trim_zeros(trialCerebAngles[0]), color='orange')
+                    elbowCerebAngle, = ax7.plot(np.trim_zeros(trialCerebAngles[1]), color='orange')
+                
+
                     
 
                 plt.pause(1.0)
@@ -263,17 +313,28 @@ if __name__ == "__main__":
                 ax3.set_yticks(np.arange(0, 2., 0.5))
                 ax3.set_xticks(np.arange(0, 100, 10))
                 
-                ax4.cla()
+             #   ax4.cla()
             #    ax4.set_ylim([0,4])
-                ax4.set_xlim([0,100])
+            #    ax4.set_xlim([0,100])
               #  ax4.set_yticks(np.arange(0, 4, 0.8))
-                ax4.set_xticks(np.arange(0, 100, 10))
+           #     ax4.set_xticks(np.arange(0, 100, 10))
                 
                 ax5.cla()
-              #  ax5.set_ylim([0,16])
+                ax5.set_ylim([-2000,2000])
                 ax5.set_xlim([0,100])
-              #  ax5.set_yticks(np.arange(0, 16, 3.2))
+                ax5.set_yticks(np.arange(-2000, 2000, 1000))
                 ax5.set_xticks(np.arange(0, 100, 10))
+                
+                ax6.cla()
+                ax6.set_xlim([0,100])
+                ax6.set_xticks(np.arange(0, 100, 10))
+                ax6.set_ylim([-np.pi, np.pi])
+                
+                ax7.cla()
+                ax7.set_xlim([0,100])
+                ax7.set_xticks(np.arange(0, 100, 10))
+                ax7.set_ylim([-np.pi, np.pi])
+                
 
         
         

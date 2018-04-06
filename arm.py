@@ -381,7 +381,46 @@ class Arm:
         self.sensors[3] = self.dtheta2
                     
         self.getElbowPose()
-        self.getEndEffectorPose()    
+        self.getEndEffectorPose()
+    
+    def setEffPosition(self, position):
+        
+        self.tau1 = 0.0 # shulder torque
+        self.tau2 = 0.0 # elbow torque
+        self.theta1     = 0.0 #utils.changeRange(0.5, 0.,1., shoulderRange[0], shoulderRange[1])
+        self.theta2     = 0.0 #utils.changeRange(0.5, 0.,1., elbowRange[0], elbowRange[1])
+        self.dtheta1   = 0.0       
+        self.dtheta2   = 0.0
+        self.ddtheta1 = 0.0
+        self.ddtheta2 = 0.0
+        
+        self.tau           = np.zeros(2)
+        self.theta         = np.zeros(2)
+        self.dot_theta     = np.zeros(2)
+        self.dot_dot_theta = np.zeros(2)
+        
+        self.g  = 0.0 # 9.81 gravity
+        self.dt = 0.01
+        
+        self.d_x = 0.0
+        self.d_y = 0.0
+        
+        self.xElbow = self.L1*np.cos(self.theta1)
+        self.yElbow = self.L1*np.sin(self.theta1)
+        self.xEndEf = position[0] #self.L1*np.cos(self.theta1) + self.L2*np.cos(self.theta1+self.theta2)
+        self.yEndEf = position[1] #]self.L1*np.sin(self.theta1) + self.L2*np.sin(self.theta1+self.theta2)
+        
+        self.getInverseKinematic(self.xEndEf,self.yEndEf)
+        
+        self.sensors = np.zeros(4)
+        self.sensors[0] = self.theta1 
+        self.sensors[1] = self.theta2
+        self.sensors[2] = self.dtheta1 
+        self.sensors[3] = self.dtheta2
+                    
+        self.getElbowPose()
+        self.getEndEffectorPose()
+        
             
             
             

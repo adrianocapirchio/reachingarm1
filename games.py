@@ -35,6 +35,7 @@ class armReaching6targets:
         
         
         self.goalPos = self.goalList[0].copy()
+        self.prvGoalPos = self.goalPos.copy()
         
         self.currPos = np.zeros(2)
         self.prvPos = np.zeros(2)
@@ -46,7 +47,12 @@ class armReaching6targets:
         self.currJerk = np.zeros(1)
         
         self.goalPositionHistory = np.zeros([2, self.maxTrial, maxEpoch])
+
         
+        self.trialArmAngles = np.zeros([2, maxStep, self.maxTrial, maxEpoch])
+        self.goalAnglesHistory = np.zeros([2, maxStep, self.maxTrial, maxEpoch])
+        self.trialGangliaAngles = np.zeros([2, maxStep, self.maxTrial, maxEpoch])
+        self.trialCerebAngles = np.zeros([2, maxStep, self.maxTrial, maxEpoch])
         self.trialTrajectories = np.zeros([2, maxStep, self.maxTrial, maxEpoch])
         self.trialVelocity = np.zeros([maxStep, self.maxTrial, maxEpoch])
         self.trialAccelleration = np.zeros([maxStep, self.maxTrial, maxEpoch])

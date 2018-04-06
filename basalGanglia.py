@@ -14,9 +14,9 @@ class actorCritic:
     
     def init(self, MULTINET, VISION, GOAL_VISION , AGENT_VISION, PROPRIOCEPTION, ELBOW_PROPRIOCEPTION, SHOULDER_PROPRIOCEPTION, maxStep, maxTrial, goalList, perfBuff, cerebellumTime, DOF = 2):
 
-        self.noiseMag0 = 0.65
+        self.noiseMag0 = 1.2
         self.noiseMag1 = 1.2 #0.16
-        self.DELTM = 0.13 #0.56
+        self.DELTM = 0.04 #0.56
         self.TAU = 1.
         
         # LEARNING PARAM2ETERS
@@ -24,7 +24,7 @@ class actorCritic:
         self.ACT_ETA2 = 1.0 * 10 ** (   -6)# # slow 0.00025
         self.CRIT_ETA = 1.0 * 10 ** (   -4) #0.00000000001# slow 0.01 -8
         
-        self.DISC_FACT = 0.8
+        self.DISC_FACT = 0.99
 
         
         self.bias = np.ones(1)
@@ -49,7 +49,7 @@ class actorCritic:
             
             if ELBOW_PROPRIOCEPTION == True:
                 
-                self.elbowInputUnits= 1001# 901 fast #2101 slow#2101
+                self.elbowInputUnits= 2501# 901 fast #2101 slow#2501
                 self.intervalsElbow = self.elbowInputUnits - 1
                 self.sigElbow = 1. / (self.intervalsElbow * 2)
                 self.elbowGrid = np.linspace(0, 1, self.elbowInputUnits)
@@ -58,7 +58,7 @@ class actorCritic:
                 
             if SHOULDER_PROPRIOCEPTION == True:
                 
-                self.shoulderInputUnits= 1001 #1501 fast #3501 slow 
+                self.shoulderInputUnits= 2501 #1501 fast #2501 slow 
                 self.intervalsShoulder =  self.shoulderInputUnits -1
                 self.sigShoulder = 1. / (self.intervalsShoulder * 2)
                 self.shoulderGrid = np.linspace(0, 1, self.shoulderInputUnits)
