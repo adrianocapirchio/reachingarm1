@@ -421,6 +421,15 @@ class Arm:
         self.getElbowPose()
         self.getEndEffectorPose()
         
+        
+    def stopMove(self):
+        
+        self.dtheta1   = 0.0
+        self.ddtheta1 = 0.0
+        
+        self.dtheta2   = 0.0
+        self.ddtheta2 = 0.0
+        
             
             
             

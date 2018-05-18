@@ -10,12 +10,17 @@ import utilities as utils
 
 class Cerebellum():
     
-    def init(self, MULTINET, goalList, stateBg, DOF = 2):
+    def init(self, MULTINET, goalList, stateBg, maxStep, DOF = 2):
         
         
+        
+        self.dT = 1.0 / 6
+        self.tau  = 1.
+        self.C1 = self.dT / self.tau
+        self.C2 = 1. - self.C1
         
         # LEARNING
-        self.cbETA = 0.2 * 10 ** (-1)# 0.0025 SLOW # 0.025 fast
+        self.cbETA = 1.0* 10 ** (-1)# 0.0025 SLOW # 0.025 fast
         
         # STATE
         self.currState = np.zeros(len(stateBg))
@@ -34,6 +39,8 @@ class Cerebellum():
         # TEACHING 
         self.trainOut = np.ones(DOF) * 0.5
         self.errorOut = np.ones(DOF) * 0.5
+                               
+        self.desOutBuff = np.ones([DOF , maxStep]) * 0.5
         
        # self.trainEstVision = np.zeros(2)
       #  self.errorTrainEstVision = np.zeros(2)
@@ -49,6 +56,7 @@ class Cerebellum():
         
         # OUTPUT
         self.currOut = np.ones(DOF) * 0.5
+        self.leakedOut = np.ones(DOF) * 0.5
         self.prvOut = np.ones(DOF) * 0.5
         
         
@@ -57,11 +65,15 @@ class Cerebellum():
      #   self.trialFwdError = 0.
         
         
-    def epochReset(self, DOF = 2):
+    def epochReset(self, maxStep,DOF = 2):
         
         # OUTPUT
         self.currOut = np.ones(DOF) * 0.5
+        self.leakedOut = np.ones(DOF) * 0.5
         self.prvOut = np.ones(DOF) * 0.5
+                             
+                             
+        self.desOutBuff = np.ones([DOF , maxStep])* 0.5
         
       #  self.estVision *= 0.
       #  self.estVisionDistance *=0
@@ -78,7 +90,10 @@ class Cerebellum():
       #  self.estVision *= 0.  
       #  self.estVisionDistance *=0
       #  self.errorEstVision *= 0 
-      #  self.prvErrorEstVision *= 0       
+      #  self.prvErrorEstVision *= 0  
+      
+    def trialReset(self, maxStep, DOF = 2):
+        self.desOutBuff = np.ones([DOF , maxStep])* 0.5  
       
         
     def spreading(self,state):
@@ -87,4 +102,4 @@ class Cerebellum():
     def trainCb(self,state, ep):
         self.trainOut = utils.sigmoid(np.dot(self.w.T, state))
         self.errorOut = ep - self.trainOut
-        self.w +=  self.cbETA * np.outer(state, self.errorOut)
+        self.w +=  self.cbETA * np.outer(state, self.errorOut) * self.trainOut * (1. - self.trainOut)

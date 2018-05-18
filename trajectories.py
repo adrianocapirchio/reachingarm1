@@ -14,24 +14,27 @@ import utilities as utils
 from arm import Arm
 from games import armReaching6targets
 
-shoulderRange = np.array([-0.7, np.pi])
-elbowRange = np.array([0.0, np.pi ] )
+
+
+
+shoulderRange = np.array([-1.0, np.pi])
+elbowRange = np.array([0.0, np.pi ])
+
 
 
 CEREBELLUM = True
-INTRALAMINAR_NUCLEI = True
+INTRALAMINAR_NUCLEI = False
 
 ATAXIA = True
-damageMag = 0.1
+damageMag = 5.0
 
 
 
 
-actETA1 = 0.2 * 10 ** ( -1)
-actETA2 = 1. * 10 ** (- 6)
-critETA = 1. * 10 ** ( -4)
-cbETA   = 0.2 * 10 ** ( -1)
-
+actETA1 = 1.0 * 10 ** ( -1)
+actETA2 = 1.0 * 10 ** (- 3)
+critETA = 1.0 * 10 ** ( -5)
+cbETA   = 1.0 * 10 ** ( -1)
 
 
 
@@ -39,9 +42,10 @@ goalRange = 0.02
 
 
 seed = 0
-maxEpoch = 1500
+maxEpoch = 600
 maxStep = 150
-startPlotting= 1395
+startPlotting= 578
+
 
 mydir = os.getcwd
 
@@ -81,8 +85,9 @@ accelleration             = np.load("gameAccelleration_seed=%s.npy" %(seed))
 jerk                      = np.load("gameJerk_seed=%s.npy" %(seed))
 
 
-
-
+#linearityIndexData = np.zeros([game.maxTrial,maxEpoch])
+##asimmetryIndexData = np.zeros([game.maxTrial,maxEpoch])
+#smoothnessIndexData = np.zeros([game.maxTrial,maxEpoch])
 
 
 
@@ -117,8 +122,8 @@ if __name__ == "__main__":
        
             
             
-            ax1.set_xlim([-0.75,0.75])
-            ax1.set_ylim([-0.5,0.75])
+            ax1.set_xlim([-0.4,0.2])
+            ax1.set_ylim([ 0.1,0.5])
             
             circle1 = plt.Circle((game.goalList[0]), goalRange, color = 'yellow') 
             edgecircle1 = plt.Circle((game.goalList[0]), goalRange, color = 'black', fill = False) 
@@ -157,10 +162,10 @@ if __name__ == "__main__":
             
             
             ax3 =  fig1.add_subplot(gs[0:1, 6:8])
-            ax3.set_ylim([0,2.])
-            ax3.set_xlim([0,100])
-            ax3.set_yticks(np.arange(0, 2., 0.5))
-            ax3.set_xticks(np.arange(0, 100, 10))
+            ax3.set_ylim([0,1.5])
+            ax3.set_xlim([0,maxStep])
+            ax3.set_yticks(np.arange(0, 1.5, 0.5))
+            ax3.set_xticks(np.arange(0, maxStep, 10))
             title3 = plt.figtext(.79, 0.90, "VELOCITY" , style='normal', bbox={'facecolor':'orangered'})
             text5 = plt.figtext(.74, .75, "asimmetry index = %s" % (0), style='italic', bbox={'facecolor':'lightblue'})
             
@@ -185,14 +190,14 @@ if __name__ == "__main__":
             ax6 =fig1.add_subplot(gs[5:6, 6:8])
             ax6.set_xlim([0,100])
             ax6.set_xticks(np.arange(0, 100, 10))
-            ax6.set_ylim([-np.pi, np.pi])
+            ax6.set_ylim([-1.0, np.pi])
             
             title6 = plt.figtext(.76, .41, "SHOULDER ANGLE" , style='normal', bbox={'facecolor':'orangered'})
             
             ax7 =fig1.add_subplot(gs[7:8, 6:8])
             ax7.set_xlim([0,100])
             ax7.set_xticks(np.arange(0, 100, 10))
-            ax7.set_ylim([-np.pi, np.pi])
+            ax7.set_ylim([0.0, np.pi])
             
             title7 = plt.figtext(.77, .21, "ELBOW ANGLE" , style='normal', bbox={'facecolor':'orangered'})
             
@@ -208,6 +213,8 @@ if __name__ == "__main__":
         
             
         for trial in xrange(game.maxTrial):
+            
+      #      asimmetryIndex = 0
             
           #  print trial
             
@@ -227,9 +234,20 @@ if __name__ == "__main__":
             trialAccelleration = accelleration[:,trial,epoch].copy()
             trialJerk = jerk[:,trial,epoch].copy()
             
+            
+            minDistance = utils.distance(trialTraj[:,0], gameGoalPos)
+            
+            if epoch > startPlotting:
+                print minDistance ,trial
+            
             linearityIndex = utils.linearityIndex(trialTraj, gameGoalPos, goalRange)
-            smoothnessIndex = utils.smoothnessIndex(trialJerk)
-            asimmetryIndex = utils.asimmetryIndex(trialVelocity)
+            smoothnessIndex1 = utils.smoothnessIndex(trialJerk)
+            
+            
+            if trialVelocity.any() != 0:
+                asimmetryIndex = utils.asimmetryIndex(trialVelocity)
+            
+
                 
             
             
@@ -237,12 +255,12 @@ if __name__ == "__main__":
                     
                 text2.set_text("trial = %s" % (trial +1))
                 text3.set_text("linearity index = %s" % (linearityIndex))
-                text4.set_text("smoothness index = %s" % (smoothnessIndex))
+                text4.set_text("smoothness index = %s" % (smoothnessIndex1))
                 text5.set_text("asimmetry index = %s" % (asimmetryIndex))
                 
                 ax1.cla()
-                ax1.set_xlim([-0.75,0.75])
-                ax1.set_ylim([-0.5,0.75])
+                ax1.set_xlim([-0.4,0.2])
+                ax1.set_ylim([ 0.1,0.5])
                 
                 circle1 = plt.Circle((game.goalList[0]), goalRange, color = 'yellow') 
                 edgecircle1 = plt.Circle((game.goalList[0]), goalRange, color = 'black', fill = False) 
@@ -304,14 +322,14 @@ if __name__ == "__main__":
 
                     
 
-                plt.pause(1.0)
+                plt.pause(3.0)
                     
                     
                 ax3.cla()
-                ax3.set_ylim([0,2.])
-                ax3.set_xlim([0,100])
-                ax3.set_yticks(np.arange(0, 2., 0.5))
-                ax3.set_xticks(np.arange(0, 100, 10))
+                ax3.set_ylim([0,1.5])
+                ax3.set_xlim([0,maxStep])
+                ax3.set_yticks(np.arange(0, 1.5, 0.5))
+                ax3.set_xticks(np.arange(0, maxStep, 10))
                 
              #   ax4.cla()
             #    ax4.set_ylim([0,4])
@@ -328,12 +346,20 @@ if __name__ == "__main__":
                 ax6.cla()
                 ax6.set_xlim([0,100])
                 ax6.set_xticks(np.arange(0, 100, 10))
-                ax6.set_ylim([-np.pi, np.pi])
+                ax6.set_ylim([-1.0, np.pi])
                 
                 ax7.cla()
                 ax7.set_xlim([0,100])
                 ax7.set_xticks(np.arange(0, 100, 10))
-                ax7.set_ylim([-np.pi, np.pi])
+                ax7.set_ylim([0.0, np.pi])
+                
+                
+                                  
+                                  
+                                  
+                                  
+
+                
                 
 
         

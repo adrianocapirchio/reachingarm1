@@ -23,12 +23,12 @@ class armReaching6targets:
         
         
                             
-        self.goalList = [np.array([-0.07, 0.20]),
-                         np.array([ 0.10, 0.20]),
-                         np.array([-0.24, 0.20]),
-                         np.array([-0.07, 0.46]),        
-                         np.array([ 0.10, 0.46]),
-                         np.array([-0.24, 0.46])]
+        self.goalList = [np.array([-0.07 -.05, 0.20 +0.0]),
+                         np.array([ 0.10 -.05, 0.20 +0.0]),
+                         np.array([-0.24 -.05, 0.20 +0.0]),
+                         np.array([-0.07 -.05, 0.46 +0.0]),        
+                         np.array([ 0.10 -.05, 0.46 +0.0]),
+                         np.array([-0.24 -.05, 0.46 +0.0])]
         
         self.maxTrial = 7#len(self.goalList)
         
@@ -56,7 +56,25 @@ class armReaching6targets:
         self.trialTrajectories = np.zeros([2, maxStep, self.maxTrial, maxEpoch])
         self.trialVelocity = np.zeros([maxStep, self.maxTrial, maxEpoch])
         self.trialAccelleration = np.zeros([maxStep, self.maxTrial, maxEpoch])
-        self.trialJerk = np.zeros([maxStep, self.maxTrial, maxEpoch])        
+        self.trialJerk = np.zeros([maxStep, self.maxTrial, maxEpoch])       
+        
+        
+    def epochReset(self):
+        
+        self.currPos = np.zeros(2)
+        self.prvPos = np.zeros(2)
+        
+        self.currVel = np.zeros(1)
+        self.prvVel = np.zeros(1)
+        self.currAcc = np.zeros(1)
+        self.prvAcc = np.zeros(1)
+        self.currJerk = np.zeros(1)
+        
+        
+        
+        
+        
+        
 
     
     
@@ -72,9 +90,9 @@ class armReaching6targets:
         elif trial == 1:
             self.goalPos = self.goalList[5].copy()
         elif trial == 3:
-            self.goalPos = self.goalList[3].copy()
-        elif trial == 5:
             self.goalPos = self.goalList[4].copy()
+        elif trial == 5:
+            self.goalPos = self.goalList[3].copy()
         
         
      ##   if trial%2 == 0:
@@ -142,12 +160,32 @@ class armReaching6targets:
     
     
     
-    def goalIndex0(self):
+    def goalIndex0(self, trial):
         
-        for i in xrange(len(self.goalList)):
-            if (self.goalPos == self.goalList[i]).all():
-            #    print i
+        for i in xrange(self.maxTrial):
+            if trial == i:
                 self.goalIdx = i
+        
+    #    if trial == 0:
+    #        self.goalIdx = 0
+     #   if trial == 1:
+     #       self.goalIdx = 1
+      #  if trial == 2:
+      #      self.goalIdx = 2
+      #  if trial == 3:
+      #      self.goalIdx = 3
+      #  if trial == 4:
+      #      self.goalIdx = 4
+      #  if trial == 5:
+      #      self.goalIdx = 5
+      #  if trial == 6:
+      #      self.goalIdx = 6
+            
+        
+      #  for i in xrange(len(self.goalList)):
+      #      if (self.goalPos == self.goalList[i]).all():
+      #      #    print i
+      #          self.goalIdx = i
                 
     
 
@@ -158,18 +196,17 @@ class armReaching6targets:
 
 
             
-    def goalIndex1(self, trial, reachType):
+    def goalIndex1(self, trial):
         
         
-        if trial == 0 or trial ==2:
-            self.goalIdx = 3
+        if trial%2 == 0:
+            self.goalIdx = 0
         elif trial == 1:
-            if reachType == 0:
-                self.goalIdx = 0
-            elif reachType == 1:
-                self.goalIdx = 1
-            elif reachType == 2:
-                self.goalIdx = 2
+            self.goalIdx = 1
+        elif trial == 3:
+            self.goalIdx = 2
+        elif trial == 5:
+            self.goalIdx = 3
   #☻#      elif trial == 2:
      #       if reachType == 0:
      #           self.goalIdx = 3

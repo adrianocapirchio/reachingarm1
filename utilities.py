@@ -20,6 +20,12 @@ def gaussian(x, mu, sig):
     return np.exp(-((x - mu)**2/ (2 * sig ** 2.)))
 
 
+def rbf2D(position, activation, grid, sig):
+    for i in xrange(len(grid[0])):
+        activation[i] = np.exp(-distance(position,grid[:,i])**2  / (2 * sig ** 2.))        
+    return activation
+
+
 def gaussian2D(curr2DPos, mu, sig, inputArray, intervals):
     for j in xrange(intervals +1):
         for i in xrange(intervals +1):
@@ -101,6 +107,18 @@ def build2DGrid(intervals, rangeMin, rangeMax):
     end[1,:,:] = yy
         
     return end
+
+def buildGrid(minWidth, maxWidth, pointsWidth, minHeight, maxHeight, pointsHeight):
+    xPoints = np.linspace(minWidth, maxWidth ,pointsWidth)
+    yPoints = np.linspace(minHeight, maxHeight ,pointsHeight)
+    xx, yy = np.meshgrid(xPoints, yPoints)
+    
+    end = np.zeros([2,pointsWidth,pointsHeight])  
+    end[0,:,:] = xx
+    end[1,:,:] = yy
+     
+    return end
+    
 
 
 
@@ -196,9 +214,11 @@ def smoothnessIndex(jerkPath):
     
     jerkPath = np.trim_zeros(jerkPath, 'b')
     
-    J2 = np.linalg.norm(jerkPath)**2
-    J2int = np.sum(J2)
-    logJ2int = np.log(np.sqrt(J2int))
+    J2 = np.linalg.norm(jerkPath)
+ #   print J2
+ #   raw_input()
+   # J2int = np.sum(J2)
+    logJ2int = np.log(J2)
     
     return logJ2int
 
@@ -213,6 +233,20 @@ def asimmetryIndex(velPath):
     
     if prePeak != 0:
         return float(postPeak)/float(prePeak)
+    
+
+def smoothnessIndex1(jerkPath, distance):
+    
+    jerkPath = np.trim_zeros(jerkPath, 'b')
+    
+    J2 = np.linalg.norm(jerkPath)**2  * (len(jerkPath)**6 / distance **2)
+ #   print J2
+ #   raw_input()
+   # J2int = np.sum(J2)
+    logJ2int = np.log(J2)
+    
+    return logJ2int
+
     
     
     
