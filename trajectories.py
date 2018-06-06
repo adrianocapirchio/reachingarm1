@@ -26,26 +26,25 @@ CEREBELLUM = True
 INTRALAMINAR_NUCLEI = False
 
 ATAXIA = True
-damageMag = 5.0
+damageMag = 20.0
 
 
 
 
-actETA1 = 1.0 * 10 ** ( -1)
+actETA1 = 6.0 * 10 ** ( -1)
 actETA2 = 1.0 * 10 ** (- 3)
-critETA = 1.0 * 10 ** ( -5)
-cbETA   = 1.0 * 10 ** ( -1)
+critETA = 6.0 * 10 ** ( -5)
+cbETA   = 6.0 * 10 ** ( -1)
 
 
 
-goalRange = 0.02
+goalRange = 0.03
 
 
-seed = 0
-maxEpoch = 600
+seed = 3
+maxEpoch = 1500
 maxStep = 150
-startPlotting= 578
-
+startPlotting= 1459
 
 mydir = os.getcwd
 
@@ -80,8 +79,8 @@ if CEREBELLUM == True:
 
 goalPosition              = np.load("goalPositionHistory_seed=%s.npy" %(seed))
 goalAngles                = np.load("goalAnglesHistory_seed=%s.npy" %(seed))
-velocity                  = np.load("gameVelocity_seed=%s.npy" %(seed) )
-accelleration             = np.load("gameAccelleration_seed=%s.npy" %(seed))
+#velocity                  = np.load("gameVelocity_seed=%s.npy" %(seed) )
+#accelleration             = np.load("gameAccelleration_seed=%s.npy" %(seed))
 jerk                      = np.load("gameJerk_seed=%s.npy" %(seed))
 
 
@@ -165,7 +164,7 @@ if __name__ == "__main__":
             ax3.set_ylim([0,1.5])
             ax3.set_xlim([0,maxStep])
             ax3.set_yticks(np.arange(0, 1.5, 0.5))
-            ax3.set_xticks(np.arange(0, maxStep, 10))
+            ax3.set_xticks(np.arange(0, maxStep, 20))
             title3 = plt.figtext(.79, 0.90, "VELOCITY" , style='normal', bbox={'facecolor':'orangered'})
             text5 = plt.figtext(.74, .75, "asimmetry index = %s" % (0), style='italic', bbox={'facecolor':'lightblue'})
             
@@ -180,23 +179,23 @@ if __name__ == "__main__":
             
             ax5 =  fig1.add_subplot(gs[2:3, 6:8])
             ax5.set_ylim([-2000,2000])
-            ax5.set_xlim([0,100])
+            ax5.set_xlim([0,maxStep])
             ax5.set_yticks(np.arange(-2000, 2000, 1000))
-            ax5.set_xticks(np.arange(0, 100, 10))
+            ax5.set_xticks(np.arange(0, maxStep, 20))
             
             title5 = plt.figtext(.8, .70, "JERK" , style='normal', bbox={'facecolor':'orangered'})
             text4 = plt.figtext(.72, .55, "smoothness index = %s" % (0), style='italic', bbox={'facecolor':'lightblue'})
             
             ax6 =fig1.add_subplot(gs[5:6, 6:8])
             ax6.set_xlim([0,100])
-            ax6.set_xticks(np.arange(0, 100, 10))
+            ax6.set_xticks(np.arange(0, maxStep, 20))
             ax6.set_ylim([-1.0, np.pi])
             
             title6 = plt.figtext(.76, .41, "SHOULDER ANGLE" , style='normal', bbox={'facecolor':'orangered'})
             
             ax7 =fig1.add_subplot(gs[7:8, 6:8])
             ax7.set_xlim([0,100])
-            ax7.set_xticks(np.arange(0, 100, 10))
+            ax7.set_xticks(np.arange(0, maxStep, 20))
             ax7.set_ylim([0.0, np.pi])
             
             title7 = plt.figtext(.77, .21, "ELBOW ANGLE" , style='normal', bbox={'facecolor':'orangered'})
@@ -214,6 +213,8 @@ if __name__ == "__main__":
             
         for trial in xrange(game.maxTrial):
             
+            print trial, epoch
+            
       #      asimmetryIndex = 0
             
           #  print trial
@@ -229,23 +230,89 @@ if __name__ == "__main__":
             if CEREBELLUM == True:
                 trialCerebAngles = cerebAngles[:,:,trial,epoch].copy()
             
+            
+            
+            
             trialTraj = trajectories[:,:,trial,epoch].copy()
-            trialVelocity = velocity[:,trial,epoch].copy()
-            trialAccelleration = accelleration[:,trial,epoch].copy()
-            trialJerk = jerk[:,trial,epoch].copy()
+            
+            if trialTraj[0,:].any() != 0 :
+                trimmedTraj = utils.trimTraj(trialTraj) 
+            
+                minDistance = utils.distance(trimmedTraj[:,0], trimmedTraj[:,len(trimmedTraj[0,:]) -1])
+                trajLen = utils.trajLen(trimmedTraj)
             
             
-            minDistance = utils.distance(trialTraj[:,0], gameGoalPos)
+                trialTangVel = np.zeros(len(trimmedTraj[0,:]))
             
-            if epoch > startPlotting:
-                print minDistance ,trial
+
+                for step in xrange(len(trimmedTraj[0,:])):
+                
+                    if step > 0:
+               #     print trimmedTraj[:,step]
+          #          print utils.distance(trimmedTraj[:,step],trimmedTraj[:,step -1]) / arm.dt
+                        trialTangVel[step] = utils.distance(trimmedTraj[:,step],trimmedTraj[:,step -1]) / arm.dt
             
-            linearityIndex = utils.linearityIndex(trialTraj, gameGoalPos, goalRange)
-            smoothnessIndex1 = utils.smoothnessIndex(trialJerk)
+            #   trialVelocity = velocity[:,trial,epoch].copy()
+         #   trialAccelleration = accelleration[:,trial,epoch].copy()
+                trialTangJerk = np.trim_zeros(jerk[:,trial,epoch], 'b')
+            
+
+            
+           
             
             
-            if trialVelocity.any() != 0:
-                asimmetryIndex = utils.asimmetryIndex(trialVelocity)
+            
+            
+            
+            
+                trialdXdY = np.zeros([ 2, len(trimmedTraj[0,:]) ])
+            
+                trialdXdY[0,:] = np.ediff1d(trimmedTraj[0,:], to_begin = np.array([0]))  / arm.dt
+                trialdXdY[1,:] = np.ediff1d(trimmedTraj[1,:], to_begin = np.array([0]))  / arm.dt
+            
+           
+                trialddXddY = np.zeros([ 2, len(trimmedTraj[0,:]) ])
+            
+                trialddXddY[0,:] = np.ediff1d(trialdXdY[0,:], to_begin = np.array([0]))  / arm.dt
+                trialddXddY[1,:] = np.ediff1d(trialdXdY[1,:], to_begin = np.array([0]))  / arm.dt
+                       
+            
+                       
+                       
+                trialdddXdddY = np.zeros([ 2, len(trimmedTraj[0,:]) ])
+            
+                trialdddXdddY[0,:] = np.ediff1d(trialddXddY[0,:], to_begin = np.array([0]))  / arm.dt
+                trialdddXdddY[1,:] = np.ediff1d(trialddXddY[1,:], to_begin = np.array([0]))  / arm.dt
+                    
+                
+                trialJerk = np.mean(trialdddXdddY)
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+                linearityIndex = (utils.linearityIndex(trajLen, minDistance) -1.) * 100
+            
+            
+            
+            
+           
+            
+          #  if epoch > startPlotting:
+          #      print minDistance ,trial
+          #  trajLen = utils.trajLen(trialTraj)
+    #        minDistance = utils.distance(trialTraj[:,0],trialTraj[:,0])
+ #           linearityIndex = utils.linearityIndex(trialTraj, gameGoalPos, goalRange)
+#
+                smoothnessIndex = utils.smoothnessIndex(trialdddXdddY, trajLen, arm.dt)
+            
+            
+                asimmetryIndex = utils.asimmetryIndex(trialTangVel)
             
 
                 
@@ -255,7 +322,7 @@ if __name__ == "__main__":
                     
                 text2.set_text("trial = %s" % (trial +1))
                 text3.set_text("linearity index = %s" % (linearityIndex))
-                text4.set_text("smoothness index = %s" % (smoothnessIndex1))
+                text4.set_text("smoothness index = %s" % (smoothnessIndex))
                 text5.set_text("asimmetry index = %s" % (asimmetryIndex))
                 
                 ax1.cla()
@@ -296,14 +363,14 @@ if __name__ == "__main__":
                 ax1.add_artist(rewardCircle)
         
         
-                traj = plt.Line2D(np.trim_zeros(trialTraj[0], 'b') , np.trim_zeros(trialTraj[1], 'b') , color = 'red')
+                traj = plt.Line2D(np.trim_zeros(trimmedTraj[0], 'b') , np.trim_zeros(trimmedTraj[1], 'b') , color = 'red')
                 ax1.add_artist(traj)
                 
             
                    
-                linearVelocityPlot, = ax3.plot(np.trim_zeros(trialVelocity,'b'), color='blue')
+                linearVelocityPlot, = ax3.plot(np.trim_zeros(trialTangVel,'b'), color='blue')
              #   linearAccellerationyPlot, = ax4.plot(np.trim_zeros(trialAccelleration, 'b'), color='blue')
-                linearJerkPlot, = ax5.plot(np.trim_zeros(trialJerk, 'b'), color='blue')
+                linearJerkPlot, = ax5.plot(np.trim_zeros(trialTangJerk, 'b'), color='blue')
                 
                 
                 
@@ -329,7 +396,7 @@ if __name__ == "__main__":
                 ax3.set_ylim([0,1.5])
                 ax3.set_xlim([0,maxStep])
                 ax3.set_yticks(np.arange(0, 1.5, 0.5))
-                ax3.set_xticks(np.arange(0, maxStep, 10))
+                ax3.set_xticks(np.arange(0, maxStep, 20))
                 
              #   ax4.cla()
             #    ax4.set_ylim([0,4])
@@ -339,18 +406,18 @@ if __name__ == "__main__":
                 
                 ax5.cla()
                 ax5.set_ylim([-2000,2000])
-                ax5.set_xlim([0,100])
+                ax5.set_xlim([0,maxStep])
                 ax5.set_yticks(np.arange(-2000, 2000, 1000))
-                ax5.set_xticks(np.arange(0, 100, 10))
+                ax5.set_xticks(np.arange(0, maxStep, 20))
                 
                 ax6.cla()
-                ax6.set_xlim([0,100])
-                ax6.set_xticks(np.arange(0, 100, 10))
+                ax6.set_xlim([0,maxStep])
+                ax6.set_xticks(np.arange(0, maxStep, 20))
                 ax6.set_ylim([-1.0, np.pi])
                 
                 ax7.cla()
-                ax7.set_xlim([0,100])
-                ax7.set_xticks(np.arange(0, 100, 10))
+                ax7.set_xlim([0,maxStep])
+                ax7.set_xticks(np.arange(0, maxStep, 20))
                 ax7.set_ylim([0.0, np.pi])
                 
                 

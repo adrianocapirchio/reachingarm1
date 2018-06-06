@@ -14,13 +14,13 @@ class Cerebellum():
         
         
         
-        self.dT = 1.0 / 6
+        self.dT = 0.95
         self.tau  = 1.
         self.C1 = self.dT / self.tau
         self.C2 = 1. - self.C1
         
         # LEARNING
-        self.cbETA = 1.0* 10 ** (-1)# 0.0025 SLOW # 0.025 fast
+        self.cbETA = 6.0 * 10 ** (-1) # 0.0025 SLOW # 0.025 fast
         
         # STATE
         self.currState = np.zeros(len(stateBg))
@@ -35,12 +35,12 @@ class Cerebellum():
  #       self.fwdVisionW = np.zeros([len(np.hstack([visionState,wristState])), 2])
   #      self.fwdWristW = np.zeros([len(np.hstack([wristState,wristState])), 3])
         
-               
+        self.tau1 = 1.0       
         # TEACHING 
-        self.trainOut = np.ones(DOF) * 0.5
-        self.errorOut = np.ones(DOF) * 0.5
-                               
-        self.desOutBuff = np.ones([DOF , maxStep]) * 0.5
+    #    self.trainOut = np.ones(DOF) * 0.5
+        self.errorOut = np.zeros(2)
+    #                           
+    #    self.desOutBuff = np.ones([DOF , maxStep]) * 0.5
         
        # self.trainEstVision = np.zeros(2)
       #  self.errorTrainEstVision = np.zeros(2)
@@ -55,9 +55,24 @@ class Cerebellum():
      #   self.errorEstWrist = np.zeros(len(wristState))
         
         # OUTPUT
-        self.currOut = np.ones(DOF) * 0.5
-        self.leakedOut = np.ones(DOF) * 0.5
-        self.prvOut = np.ones(DOF) * 0.5
+        self.currU = np.zeros(2)
+        self.prvU = self.currU.copy()
+        
+        self.currI = np.ones(2) * 0.5
+        self.prvI = self.currI.copy()
+        
+        self.damageI = np.ones(2) * 0.5
+        
+        self.trainU = np.zeros(2)
+        self.prvTrainU = self.trainU.copy() 
+        
+        self.trainI = np.ones(2) * 0.5
+        self.prvTrainI = self.trainI.copy()
+        
+        
+      #  self.currOut = np.ones(DOF) * 0.5
+      #  self.leakedOut = np.ones(DOF) * 0.5
+      #  self.prvOut = np.ones(DOF) * 0.5
         
         
      #   self.estWrist = np.zeros(2)
@@ -67,13 +82,30 @@ class Cerebellum():
         
     def epochReset(self, maxStep,DOF = 2):
         
+        self.currU = np.zeros(2)
+        self.prvU = self.currU.copy()
+        
+        self.currI = np.ones(2) * 0.5
+        self.prvI = self.currI.copy()
+        
+        self.damageI = np.ones(2) * 0.5
+        
+        self.trainU = np.zeros(2)
+        self.prvTrainU = self.trainU.copy()
+        
+        self.trainI = np.ones(2) * 0.5
+        self.prvTrainI = self.trainI.copy()
+        
+        self.errorOut = np.zeros(2)
+        
+        
         # OUTPUT
-        self.currOut = np.ones(DOF) * 0.5
-        self.leakedOut = np.ones(DOF) * 0.5
-        self.prvOut = np.ones(DOF) * 0.5
+      #  self.currOut = np.ones(DOF) * 0.5
+      #  self.leakedOut = np.ones(DOF) * 0.5
+      #  self.prvOut = np.ones(DOF) * 0.5
                              
                              
-        self.desOutBuff = np.ones([DOF , maxStep])* 0.5
+      #  self.desOutBuff = np.ones([DOF , maxStep])* 0.5
         
       #  self.estVision *= 0.
       #  self.estVisionDistance *=0
@@ -93,13 +125,32 @@ class Cerebellum():
       #  self.prvErrorEstVision *= 0  
       
     def trialReset(self, maxStep, DOF = 2):
-        self.desOutBuff = np.ones([DOF , maxStep])* 0.5  
+        
+        self.trainU = np.zeros(2)
+        self.prvTrainU = self.trainU.copy()
+        
+        self.trainI = np.ones(2) * 0.5
+        self.prvTrainI = self.trainI.copy()
+        
+        self.errorOut = np.zeros(2)
+        
+        
+      #  self.desOutBuff = np.ones([DOF , maxStep])* 0.5  
       
+    
+    def compU(self, state):
+        self.currU = self.C2 * self.prvU + self.C1 * np.dot(self.w.T, state)
         
-    def spreading(self,state):
-        self.currOut = utils.sigmoid(np.dot(self.w.T, state))
+    def spreading(self):
+        self.currI = utils.sigmoid(self.currU)
+
+    
+#    def spreading(self,state):
+#        self.currOut = utils.sigmoid(np.dot(self.w.T, state))
         
-    def trainCb(self,state, ep):
-        self.trainOut = utils.sigmoid(np.dot(self.w.T, state))
-        self.errorOut = ep - self.trainOut
-        self.w +=  self.cbETA * np.outer(state, self.errorOut) * self.trainOut * (1. - self.trainOut)
+    def trainCb(self,state, gangliaI, rew):
+        self.prvTrainU = self.trainU.copy()
+        self.trainU = self.C2 * self.prvTrainU + self.C1 * np.dot(self.w.T, state)
+        self.trainI = utils.sigmoid(self.trainU)
+        self.errorOut = gangliaI - self.trainI
+        self.w +=  self.cbETA * np.outer(state, self.errorOut) * self.trainI * (1. - self.trainI)

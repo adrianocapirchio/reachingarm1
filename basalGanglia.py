@@ -14,8 +14,8 @@ class actorCritic:
     
     def init(self, MULTINET, VISION, GOAL_VISION , AGENT_VISION, PROPRIOCEPTION, ELBOW_PROPRIOCEPTION, SHOULDER_PROPRIOCEPTION, maxStep, maxTrial, goalList, perfBuff, cerebellumTime, DOF = 2):
 
-        self.noiseMag0 = 3.0#51.0
-        self.noiseMag1 = 3.0#1.0
+        self.noiseMag0 = 0.6#51.0
+        self.noiseMag1 = 0.6#1.0
         
         
         self.DELTM1 =  0.12
@@ -23,7 +23,7 @@ class actorCritic:
         self.noiseC1 = self.DELTM1/ self.TAU
         self.noiseC2 = 1.0 - self.noiseC1
         
-        self.DELTM0 =  0.01#0.56
+        self.DELTM0 =  1. / 12#0.56
                
         self.noiseC3 = self.DELTM0/ self.TAU
         self.noiseC4 = 1. - self.noiseC3
@@ -34,13 +34,13 @@ class actorCritic:
         
         
     
-        # LEARNING PARAM2ETERS
-        self.ACT_ETA1 = 1.0 * 10 ** (   -1) #1.0 * 10 ** (   -1)
-        self.ACT_ETA2 = 6.0 * 10 ** (   -2)#1.0 * 10 ** (   -3)
-        self.CRIT_ETA = 1.0 * 10 ** (   -5)  #1.0 * 10 ** (   -4)
+        # LEARNING PARAMETERS
+        self.ACT_ETA1 = 6.0 * 10 ** (   -1) #1.0 * 10 ** (   -1)
+        self.ACT_ETA2 = 1.0 * 10 ** (   -4)#1.0 * 10 ** (   -3)
+        self.CRIT_ETA = 6.0 * 10 ** (   -5)  #1.0 * 10 ** (   -4)
 
         self.DISC_FACT = 0.99 # 0.99
-    
+
         self.n = 11
         
      #   self.bias = np.ones(1)
@@ -50,13 +50,13 @@ class actorCritic:
             self.proprioceptionState = np.array([])
             
         
-            self.proprioceptionInputUnits = 6**2
+            self.proprioceptionInputUnits = 3**2
             self.intervalsProprioception = int(np.sqrt(self.proprioceptionInputUnits)) -1
-            self.sigmaProprioception = (1. / (self.intervalsProprioception* 2))
+            self.sigmaProprioception = (1. / ((self.intervalsProprioception) * 2 ))
        #     self.proprioceptionGrid = utils.build2DGrid(self.intervalsProprioception +1, 0., 1.)
             self.proprioceptionGrid = utils.build2DGrid(self.intervalsProprioception +1, 0., 1.).reshape(2,self.proprioceptionInputUnits)
-        #    self.proprioceptionRawState = np.zeros([self.intervalsProprioception +1,self.intervalsProprioception +1])
-            self.proprioceptionState = np.zeros(self.proprioceptionInputUnits)
+          #  self.proprioceptionRawState = np.zeros([self.intervalsProprioception +1,self.intervalsProprioception +1])
+            self.proprioceptionState = np.zeros(self.proprioceptionInputUnits) #self.proprioceptionRawState.ravel()
             
             self.currState = np.zeros(len(self.currState)+len(self.proprioceptionState))
         
@@ -95,21 +95,21 @@ class actorCritic:
             if GOAL_VISION == True:
                 self.goalVisionInputUnits = self.n**2 #201
                 self.goalVisionIntervals = int(np.sqrt(self.goalVisionInputUnits)) -1               
-                self.goalVisionSig= (1. / (self.goalVisionIntervals* 2))
+                self.goalVisionSig= (1. / ((self.goalVisionIntervals) * 2))
                # self.goalVisionGrid = utils.build2DGrid(self.goalVisionIntervals +1, 0., 1.)
-                self.goalVisionGrid = utils.buildGrid(0.25,0.55,self.n,0.55,0.75,self.n).reshape(2,self.goalVisionInputUnits)
+                self.goalVisionGrid = utils.buildGrid(0.0,1.0,self.n,0.0,1.0,self.n).reshape(2,self.goalVisionInputUnits)
               #  self.goalVisionGrid = utils.build2DGrid(self.goalVisionIntervals +1, 0., 1.).reshape(2,self.goalVisionInputUnits)
-            #    self.goalVisionRawState = np.zeros([self.goalVisionIntervals +1,self.goalVisionIntervals +1])
-                self.goalVisionState = np.zeros(self.goalVisionInputUnits)
+           #     self.goalVisionRawState = np.zeros([self.goalVisionIntervals +1,self.goalVisionIntervals +1])
+                self.goalVisionState = np.zeros(self.goalVisionInputUnits) #self.goalVisionRawState.ravel()
                 self.visionState = np.zeros(len(self.visionState) + len(self.goalVisionState))
              #   self.visionState = np.zeros(self.goalVisionInputUnits)
                 
             if AGENT_VISION == True:
                 self.agentVisionInputUnits = self.n**2
                 self.agentVisionIntervals = int(np.sqrt(self.agentVisionInputUnits)) -1               
-                self.agentVisionSig= 1. / (self.agentVisionIntervals* 2)
+                self.agentVisionSig= (1. / ((self.agentVisionIntervals) * 2 * np.sqrt(2)))
              #   self.agentVisionGrid = utils.build2DGrid(self.agentVisionIntervals +1, 0., 1.)
-                self.agentVisionGrid = utils.buildGrid(0.25,0.55,self.n,0.55,0.75,self.n).reshape(2,self.agentVisionInputUnits)
+                self.agentVisionGrid = utils.buildGrid(0.0,1.0,self.n,0.0,1.0,self.n).reshape(2,self.agentVisionInputUnits)
                 #self.agentVisionGrid = utils.build2DGrid(self.agentVisionIntervals +1, 0., 1.).reshape(2,self.agentVisionInputUnits)
             #    self.agentVisionRawState = np.zeros([self.agentVisionIntervals +1,self.agentVisionIntervals +1])
                 self.agentVisionState = np.zeros(self.agentVisionInputUnits)
@@ -138,9 +138,21 @@ class actorCritic:
         self.actRew = 0
         self.prvRew = 0
         self.prvprvRew = 0
+        
+        
+        
         self.surp = np.zeros(1)
         self.currCritOut = np.zeros(1)
         self.prvCritOut = np.zeros(1)
+        
+        
+        self.currActU = np.zeros(2)
+        self.prvActU = self.currActU.copy()
+        
+        self.currActI = np.ones(2) * 0.5
+        self.prvActI = self.currActI.copy()
+        
+        
         
         self.currActOut = np.ones(DOF)*0.5
         self.leakedOut = np.ones(DOF)*0.5
@@ -174,6 +186,8 @@ class actorCritic:
         
         self.stateBuff = np.zeros([len(self.currState) , maxStep / cerebellumTime])
         self.netOutBuff = np.ones([DOF, maxStep / cerebellumTime]) * 0.5
+        
+                                 
         self.desOutBuff = np.ones([DOF, maxStep]) * 0.5
         
         
@@ -187,6 +201,15 @@ class actorCritic:
         self.prvCritOut *= 0
 
         # ACTOR PARAMETERS
+        self.currActU = np.zeros(2)
+        self.prvActU = self.currActU.copy()
+        
+        self.currActI = np.ones(2) * 0.5
+        self.prvActI = self.currActI.copy()
+        
+        
+        
+        
         self.currActOut = np.ones(DOF)*0.5
         self.leakedOut = np.ones(DOF)*0.5
         self.prvLeakedOut = np.ones(DOF)*0.5
@@ -204,9 +227,9 @@ class actorCritic:
     def trialReset(self, maxStep, cerebellumTime, DOF = 2):
         
         self.actRew = 0
-        self.surp = np.zeros(1)
-        self.currCritOut = np.zeros(1)
-        self.prvCritOut = np.zeros(1)
+       # self.surp = np.zeros(1)
+       # self.currCritOut = np.zeros(1)
+       # self.prvCritOut = np.zeros(1)
         
         
         self.stateBuff = np.zeros([len(self.currState) , maxStep/ cerebellumTime])
@@ -242,8 +265,8 @@ class actorCritic:
     
     def acquireGoalVision(self, goalPosition):
         self.goalVisionState = utils.rbf2D(goalPosition, self.goalVisionState,self.goalVisionGrid,self.goalVisionSig)
-    #    self.goalVisionRawState = utils.gaussian2D(goalPosition,self.goalVisionGrid,self.goalVisionSig,self.goalVisionRawState,self.goalVisionIntervals)
-     #   self.goalVisionState = self.goalVisionRawState.ravel()
+     #   self.goalVisionRawState = utils.gaussian2D(goalPosition,self.goalVisionGrid,self.goalVisionSig,self.goalVisionRawState,self.goalVisionIntervals)
+      #  self.goalVisionState = self.goalVisionRawState.ravel()
         
     def acquireAgentVision(self, agentPosition):
         self.agentVisionState = utils.rbf2D(agentPosition, self.agentVisionState,self.agentVisionGrid,self.agentVisionSig)
@@ -251,9 +274,9 @@ class actorCritic:
      #   self.agentVisionState = self.agentVisionRawState.ravel()
         
     def acquireProprioception(self, armAngles):
-      #  self.proprioceptionRawState = utils.gaussian2D(armAngles,self.proprioceptionGrid,self.sigmaProprioception,self.proprioceptionRawState,self.intervalsProprioception)
+     #   self.proprioceptionRawState = utils.gaussian2D(armAngles,self.proprioceptionGrid,self.sigmaProprioception,self.proprioceptionRawState,self.intervalsProprioception)
         self.proprioceptionState = utils.rbf2D(armAngles,self.proprioceptionState,self.proprioceptionGrid,self.sigmaProprioception)
-   #     self.proprioceptionState = self.proprioceptionRawState.ravel()
+     #   self.proprioceptionState = self.proprioceptionRawState.ravel()
     
     
     def acquireElbowState(self, elbowPosition):
@@ -291,12 +314,23 @@ class actorCritic:
     
     #  self.currNoise[1] = utils.limitRange((self.C2 * self.prvNoise[1] + (self.C1 *  np.random.normal(-self.currActOut[1] + 0.5, self.noiseMag1, 1))) * T, -1., 1.)
        # self.currNoise = utils.limitRange((self.C2 * self.prvNoise + self.C1 * np.random.normal(0.0, self.noiseMag0, 2)) * T, -1.0, 1.0)   
-                         
+    
+
+
+
+    def compU(self):
+        self.currActU = self.actorC2 * self.prvActU + self.actorC1 * np.dot(self.actW.T, self.currState)
+
     def spreadAct(self):
-        self.currActOut = utils.sigmoid(np.dot(self.actW.T, self.currState))
+        self.currActI = utils.sigmoid(self.currActU)
+                     
+
+
+#    def spreadAct(self):
+#        self.currActOut = utils.sigmoid(np.dot(self.actW.T, self.currState))
                          
     def spreadCrit(self): 
-        self.currCritOut = np.dot(self.critW, self.currState)
+        self.currCritOut = self.actorC2 * self.prvCritOut + self.actorC1 * np.dot(self.critW, self.currState)
         
     def compSurprise(self):
         self.surp = self.actRew + (self.DISC_FACT * self.currCritOut) - self.prvCritOut     
@@ -314,7 +348,7 @@ class actorCritic:
         self.critW += self.CRIT_ETA * self.surp * self.prvState
         
     def trainAct(self):    
-        self.actW += self.surp * self.ACT_ETA1 * np.outer(self.prvState, self.prvLeakedNoise) * self.prvLeakedOut * (1. - self.prvLeakedOut)
+        self.actW += self.surp * self.ACT_ETA1 * np.outer(self.prvState, self.prvLeakedNoise) * self.prvActI * (1.- self.prvActI)#* self.prvLeakedOut * (1. - self.prvLeakedOut)
                                
     def trainAct2(self, state, cerebOut, gangliaOut):
         self.actW += self.ACT_ETA2 * np.outer(state, (cerebOut- gangliaOut)) * gangliaOut * (1. - gangliaOut)

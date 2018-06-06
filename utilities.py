@@ -172,53 +172,49 @@ def rotationVector(R):
 
 
 
-
-
-
-
-
-
-
-
-def linearityIndex(path, endPos, goalRange):
+def trimTraj(traj):
     
-    pathx = np.trim_zeros(path[0,:], 'b')
-    pathy = np.trim_zeros(path[1,:], 'b')
+    trajdx = np.trim_zeros(traj[0,:], 'b')
+    trajdy = np.trim_zeros(traj[1,:], 'b')
     
-    trimmedPath = np.vstack([pathx, pathy])
+    trimmedTraj = np.vstack([trajdx, trajdy])
     
-  #  path = np.trim_zeros(path, 'b')
-    
-    pathLen = 0.
-    
-    startPos = path[:,0]
-    
-    minDistance = distance(startPos, endPos)
-    
-#   print path.shape
+    return trimmedTraj
 
-   # print distance(path[:, 0], path[:,1])
+
+def trajLen(traj):
     
-    for t in xrange(len(trimmedPath[0,:])):
+    trajLen = 0.
+    
+    trajdx = np.trim_zeros(traj[0,:], 'b')
+    trajdy = np.trim_zeros(traj[1,:], 'b')
+    
+    trimmedTraj = np.vstack([trajdx, trajdy])
+    
+    for t in xrange(len(trimmedTraj[0,:])):
         if t > 0:
-       #     print i
-        #    print distance(path[i -1], path[i])
-            pathLen += distance(trimmedPath[:, t], trimmedPath[:,t -1])
-        #    print pathLen
+            trajLen += distance(trimmedTraj[:, t], trimmedTraj[:,t -1])
             
- #   print pathLen / minDistance
-    
-    return (pathLen + goalRange) / minDistance
+    return trajLen
 
-def smoothnessIndex(jerkPath):
+
+
+
+def linearityIndex(trajLen, minDistance):
     
-    jerkPath = np.trim_zeros(jerkPath, 'b')
+    return (trajLen / minDistance)
+
+
+
+
+def smoothnessIndex(trajJerk, distance, armdt):
     
-    J2 = np.linalg.norm(jerkPath)
+    mJerk = trajJerk[0,:]**2 + trajJerk[1,:]**2 * (((len(trajJerk[0,:]) * armdt) ** 6) / (distance **2))    
+    totJerk = np.mean(mJerk)
  #   print J2
  #   raw_input()
    # J2int = np.sum(J2)
-    logJ2int = np.log(J2)
+    logJ2int = np.log(totJerk)
     
     return logJ2int
 
@@ -238,12 +234,13 @@ def asimmetryIndex(velPath):
 def smoothnessIndex1(jerkPath, distance):
     
     jerkPath = np.trim_zeros(jerkPath, 'b')
-    
-    J2 = np.linalg.norm(jerkPath)**2  * (len(jerkPath)**6 / distance **2)
+    normalizedJerkPath = jerkPath**2 * (len(jerkPath)**6 / distance**2)
+  
+    mJerk = np.linalg.norm(normalizedJerkPath)  
  #   print J2
  #   raw_input()
    # J2int = np.sum(J2)
-    logJ2int = np.log(J2)
+    logJ2int = np.log(mJerk)
     
     return logJ2int
 
