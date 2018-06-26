@@ -54,6 +54,9 @@ def clipped_exp(x):
 def sigmoid(x):
     return 1 / (1.0 + clipped_exp(-(2.0*x)))
 
+def sigmoid2(x, tDCSMag):
+    return 1 / (1.0 + clipped_exp(-(tDCSMag*x)))
+
 
 
 
@@ -209,7 +212,7 @@ def linearityIndex(trajLen, minDistance):
 
 def smoothnessIndex(trajJerk, distance, armdt):
     
-    mJerk = trajJerk[0,:]**2 + trajJerk[1,:]**2 * (((len(trajJerk[0,:]) * armdt) ** 6) / (distance **2))    
+    mJerk = trajJerk[0,:]**2 + trajJerk[1,:]**2 * (((len(trajJerk[0,:]) * armdt) ** 5) / (distance **2))    
     totJerk = np.mean(mJerk)
  #   print J2
  #   raw_input()

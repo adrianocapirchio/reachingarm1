@@ -23,12 +23,12 @@ class armReaching6targets:
         
         
                             
-        self.goalList = [np.array([-0.07 -.05, 0.20 +0.0]),
-                         np.array([ 0.10 -.05, 0.20 +0.0]),
-                         np.array([-0.24 -.05, 0.20 +0.0]),
-                         np.array([-0.07 -.05, 0.46 +0.0]),        
-                         np.array([ 0.10 -.05, 0.46 +0.0]),
-                         np.array([-0.24 -.05, 0.46 +0.0])]
+        self.goalList = [np.array([-0.07 -.10, 0.20 +0.06]),
+                         np.array([ 0.10 -.10, 0.20 +0.06]),
+                         np.array([-0.24 -.10, 0.20 +0.06]),
+                         np.array([-0.07 -.10, 0.46 +0.06]),        
+                         np.array([ 0.10 -.10, 0.46 +0.06]),
+                         np.array([-0.24 -.10, 0.46 +0.06])]
         
         self.maxTrial = 7#len(self.goalList)
         

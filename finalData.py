@@ -19,7 +19,7 @@ CEREBELLUM = True
 INTRALAMINAR_NUCLEI = False
 
 ATAXIA = True
-damageMag = 20.0
+damageMag = 25.0
 
 
 goalRange = 0.03
@@ -29,14 +29,14 @@ maxStep = 150
 maxTrial = 7
 maxEpoch = 1500
 seed =0
-maxSeed = 5
+maxSeed = 10
 
 
 
-actETA1 = 6.0 * 10 ** ( -1)
+actETA1 = 5.0 * 10 ** ( -1)
 actETA2 = 1.0 * 10 ** (- 6)
-critETA = 6.0 * 10 ** ( -5)
-cbETA   = 6.0 * 10 ** ( -1)
+critETA = 5.0 * 10 ** ( -5)
+cbETA   = 5.0 * 10 ** ( -1)
 
 
 
@@ -292,17 +292,17 @@ stattDCSReach5SmoIdx = allSmoIdx[5,startAtaxia +n : startAtaxia + 2*n,:]
 
 
 "FORWARD REACHINGS"
-statNormalForwardReachingsLinIdx = np.concatenate([statNormalReach1LinIdx,statNormalReach3LinIdx,statNormalReach5LinIdx], axis =0)
-statNormalForwardReachingsAsyIdx = np.concatenate([statNormalReach1AsyIdx,statNormalReach3AsyIdx,statNormalReach5AsyIdx], axis =0)
-statNormalForwardReachingsSmoIdx = np.concatenate([statNormalReach1SmoIdx,statNormalReach3SmoIdx,statNormalReach5SmoIdx], axis =0)
+statNormalForwardReachingsLinIdx = np.concatenate([statNormalReach3LinIdx,statNormalReach5LinIdx], axis =0)
+statNormalForwardReachingsAsyIdx = np.concatenate([statNormalReach3AsyIdx,statNormalReach5AsyIdx], axis =0)
+statNormalForwardReachingsSmoIdx = np.concatenate([statNormalReach3SmoIdx,statNormalReach5SmoIdx], axis =0)
 
-statAtaxiaForwardReachingsLinIdx = np.concatenate([statAtaxiaReach1LinIdx,statAtaxiaReach3LinIdx,statAtaxiaReach5LinIdx], axis =0)
-statAtaxiaForwardReachingsAsyIdx = np.concatenate([statAtaxiaReach1AsyIdx,statAtaxiaReach3AsyIdx,statAtaxiaReach5AsyIdx], axis =0)
-statAtaxiaForwardReachingsSmoIdx = np.concatenate([statAtaxiaReach1SmoIdx,statAtaxiaReach3SmoIdx,statAtaxiaReach5SmoIdx], axis =0)
+statAtaxiaForwardReachingsLinIdx = np.concatenate([statAtaxiaReach3LinIdx,statAtaxiaReach5LinIdx], axis =0)
+statAtaxiaForwardReachingsAsyIdx = np.concatenate([statAtaxiaReach3AsyIdx,statAtaxiaReach5AsyIdx], axis =0)
+statAtaxiaForwardReachingsSmoIdx = np.concatenate([statAtaxiaReach3SmoIdx,statAtaxiaReach5SmoIdx], axis =0)
 
-stattDCSForwardReachingsLinIdx = np.concatenate([stattDCSReach1LinIdx,stattDCSReach3LinIdx,stattDCSReach5LinIdx], axis =0)
-stattDCSForwardReachingsAsyIdx = np.concatenate([stattDCSReach1AsyIdx,stattDCSReach3AsyIdx,stattDCSReach5AsyIdx], axis =0)
-stattDCSForwardReachingsSmoIdx = np.concatenate([stattDCSReach1SmoIdx,stattDCSReach3SmoIdx,stattDCSReach5SmoIdx], axis =0)
+stattDCSForwardReachingsLinIdx = np.concatenate([stattDCSReach3LinIdx,stattDCSReach5LinIdx], axis =0)
+stattDCSForwardReachingsAsyIdx = np.concatenate([stattDCSReach3AsyIdx,stattDCSReach5AsyIdx], axis =0)
+stattDCSForwardReachingsSmoIdx = np.concatenate([stattDCSReach3SmoIdx,stattDCSReach5SmoIdx], axis =0)
 
 
 

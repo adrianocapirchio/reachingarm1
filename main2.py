@@ -12,19 +12,20 @@ from games import armReaching6targets
 
 
 import numpy as np
-import copy as copy
+
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 import utilities as utils
 import os
 
 
 
-shoulderRange = np.array([-1.0, np.pi])
-elbowRange = np.array([0.0, np.pi]) 
+shoulderRange = np.deg2rad(np.array([-45.0, 180.0]))
+elbowRange    = np.deg2rad(np.array([  0.0, 180.0])) 
 
 
-xVisionRange = np.array([-0.4, 0.2]) 
-yVisionRange = np.array([ 0.0, 0.6]) 
+xVisionRange = np.array([-0.4, 0.1]) 
+yVisionRange = np.array([ 0.2, 0.6]) 
 netGoalVision = np.zeros(2)
 netAgentVision = np.zeros(2)
 
@@ -37,7 +38,9 @@ netAgentVision = np.zeros(2)
 TRAINING = True
 GANGLIA_NOISE = True
 gangliaTime = 1
-perfBuff = 10
+epsi = 0.
+perfBuff = 100
+
 
 MULTINET = False
 
@@ -51,7 +54,7 @@ INTRALAMINAR_NUCLEI = False
 
 
 CEREBELLUM_DAMAGE = False
-damageMag = 20.0
+damageMag = 10.0
 TdCS = False
 TdCSMag = 1.2
 
@@ -77,7 +80,7 @@ Kd = 0.5
 
 VISION = True
 GOAL_VISION = True
-AGENT_VISION = False
+AGENT_VISION = True
 
 PROPRIOCEPTION = True
 SHOULDER_PROPRIOCEPTION = True
@@ -87,6 +90,8 @@ ELBOW_PROPRIOCEPTION = True
 
 
 avgStats = 10
+
+
 
 loadData = False
 saveData = True
@@ -101,7 +106,7 @@ saveData = True
 
 
 goalRange = 0.03
-maxSeed = 10
+maxSeed = 1
 maxEpoch = 1500
 maxStep = 150
 
@@ -299,9 +304,13 @@ if __name__ == "__main__":
                 gangliaOut, = ax1.plot([xGangliaDes], [yGangliaDes], 'o', color = 'blue' , markersize= 10)
             #    noiseEnd, = ax1.plot([noiseX], [noiseY], 'o', color = 'green' , markersize= 10)
                 
+            
                 if CEREBELLUM == True:
                     cerebOut, = ax1.plot([xCerebDes], [yCerebDes], 'o', color = 'orange' , markersize= 10)
                 
+                
+                visionLimit = patches.Rectangle(np.array([xVisionRange[0], yVisionRange[0]]), np.sqrt((xVisionRange[0] - xVisionRange[1])**2), np.sqrt((yVisionRange[0] - yVisionRange[1])**2) ,linewidth=1,edgecolor='black',facecolor='lightgrey')
+                ax1.add_patch(visionLimit)
                 
                 ax1.set_xlim([-0.75,0.75])
                 ax1.set_ylim([-0.5,0.75])
@@ -426,8 +435,6 @@ if __name__ == "__main__":
                             bg.visionState = bg.goalVisionState.copy()
                 
                 
-                if trial == 1:
-                    a = bg.goalVisionState.copy()
                             
                 
                 if epoch >= startPlotting:  
@@ -450,9 +457,9 @@ if __name__ == "__main__":
                         if trial == 1 or trial == 3 or trial == 5:
                             if bg.prvRew == 0:
                                 break
-             #           elif trial == 2 or trial == 4 or trial == 6:
-             #               if bg.prvprvRew == 0:
-             #                   break
+         #               elif trial == 2 or trial == 4 or trial == 6:
+         #                   if bg.prvprvRew == 0:
+         #                       break
                             
                             
                     game.prvPos = game.currPos.copy()
@@ -550,13 +557,13 @@ if __name__ == "__main__":
                         game.goalPositionHistory[:,trial,epoch] = game.goalPos.copy() 
                         
                         if trial%2 == 0:
-                            game.goalAnglesHistory[:,step,trial,epoch] = np.array([0.677191327159, 2.41668694554])
+                            game.goalAnglesHistory[:,step,trial,epoch] = np.array([1.04343374,  2.10975012])
                         elif trial == 1:
-                            game.goalAnglesHistory[:,step,trial,epoch] = np.array([1.45233801385,1.26788345057])
+                            game.goalAnglesHistory[:,step,trial,epoch] = np.array([1.70435218,  0.77880067])
                         elif trial == 5:
-                            game.goalAnglesHistory[:,step,trial,epoch] = np.array([1.00287219352, 1.55532820294])
+                            game.goalAnglesHistory[:,step,trial,epoch] = np.array([1.1748777,   1.28808818])
                         elif trial == 3:
-                            game.goalAnglesHistory[:,step,trial,epoch] = np.array([0.633001297621, 1.56999551608])
+                            game.goalAnglesHistory[:,step,trial,epoch] = np.array([0.89977078,  1.33238048])
                             
                             
                         game.trialTrajectories[:,step,trial,epoch] = game.currPos.copy()
@@ -656,12 +663,14 @@ if __name__ == "__main__":
                     
                     if game.distance < goalRange:
                         
+                        
+                        
                         if trial == 1:
                             
                             if step > 0:
                                 if bg.prvRew == 1:
-                              #      bg.prvprvRew = 1
-                                    bg.actRew = 1  
+                          #      bg.prvprvRew = 1
+                                    bg.actRew = np.e**(-epsi * game.currVel)
             #                       #     bg.spreadCrit()
                                     bg.currCritOut = np.zeros(1)
                         #    else:
@@ -672,12 +681,12 @@ if __name__ == "__main__":
             #                   #     bg.spreadCrit()
                         #                bg.currCritOut = np.zeros(1)
                         elif trial == 3 :
-                            if step > 10:
+                            if step > 0:
                                 if bg.prvRew == 1:
-                               #     bg.prvRew = 1
-                                    bg.actRew = 1 
+                          #      bg.prvprvRew = 1
+                                    bg.actRew =  np.e**(-epsi * game.currVel)
                             #    print bg.actRew
-                              #      bg.spreadCrit()
+                              #      bg.spreadCrit()  
                                     bg.currCritOut = np.zeros(1)
                         
                         
@@ -685,22 +694,34 @@ if __name__ == "__main__":
                         
                                             
                         elif trial == 5 :
-                            if step > 30:
+                            if step > 0:
                                 if bg.prvRew == 1:
-                               #     bg.prvRew = 1
-                                    bg.actRew = 1 
+                                #bg.prvprvRew = 1
+                                    bg.actRew =  np.e**(-epsi* game.currVel) 
                             #    print bg.actRew
                               #      bg.spreadCrit()
                                     bg.currCritOut = np.zeros(1)
                         
+                        elif trial == 2 or trial == 4 or trial == 6 :
+                            if step > 0:
+                      #          if bg.prvprvRew == 1:
+                                bg.prvRew = 1
+                                bg.actRew =  np.e**(-epsi* game.currVel)
+                            #    print bg.actRew
+                              #      bg.spreadCrit()
+                                bg.currCritOut = np.zeros(1)
+                        
+                        
                         else:
                             if step > 0:
                                 bg.prvRew = 1
-                                bg.actRew = 1#np.e**(-0.1 * game.currVel)
+                                bg.actRew = np.e**(-epsi * game.currVel)
 
                             #    print bg.actRew
                            #     bg.spreadCrit()
                                 bg.currCritOut = np.zeros(1)
+                                
+                                
                     
                     else:
                         
@@ -720,7 +741,7 @@ if __name__ == "__main__":
                         print "critic out", type(bg.currCritOut), bg.currCritOut , "surp", bg.surp 
                                                 
                                                 
-                    if bg.actRew != 0:
+                    if bg.actRew > 0:
                         arm.stopMove() 
                     
                                                 
@@ -742,36 +763,63 @@ if __name__ == "__main__":
                     
                     if CEREBELLUM == True:
                         
-                        cb.prvI = cb.currI.copy()
-                        cb.compU(bg.currState)
-                        cb.spreading()
-                            
+                       # cb.prvI = cb.currI.copy()
+                     #   cb.compU(bg.currState)
+                     #   cb.spreading()
+                        cb.compU(bg.currState)   
+                                          
                         if CEREBELLUM_DAMAGE == False:
-                            cb.tau1 = 1.
-                            cb.C1 = cb.dT / cb.tau
-                            cb.C2 = 1. - cb.C1
+                            
+                            
+                            cb.spreading()
+
                  #           cb.currI = utils.limitRange(cb.C2 * cb.leakedOut + cb.C1 * cb.currOut, 0.0, 1.0)
                             
                             netOut = (K * bg.currActI) + ((1-K) * cb.currI)
                  
                         else:
                             
-                            cb.tau1 =  np.random.normal(damageMag, (damageMag -1) /3)
                             
-                            if cb.tau1 < 1.:
-                                cb.tau1 = 1.
+                            if TdCS == False:
+                                
+                                cb.spreading()
+                                
+                                cb.tau1 =  np.random.normal(damageMag, (damageMag -1) /2)
+                            
+                                if cb.tau1 < 1.:
+                                    cb.tau1 = 1.
                      #       print cb.tau1
                        #     cb.tau = copy.deepcopy(damageMag)
                         #    cb.C1 = cb.dT / cb.tau
                         #    cb.C2 = 1. - cb.C1
                        #     print cb.currI
-                            cb.damageI = (1. - (1./ cb.tau1)) * cb.damageI + (1./cb.tau1) * cb.currI
+                                cb.damageI = (1. - (1./ cb.tau1)) * cb.damageI + (1./cb.tau1) * cb.currI
+                                             
+                            
+                            else:
+                                 
+                                cb.tau1 =  np.random.normal(damageMag, (damageMag -1) /2) 
+                                
+                                cb.spreadingtDCS(cb.tau1) 
+                                
+                                
+                                
+                                if cb.tau1 < 1.:
+                                    cb.tau1 = 1.
+                                    
+                                cb.damageI = (1. - (1./ cb.tau1)) * cb.damageI + (1./cb.tau1) * cb.currI
                       #      print cb.damageI
-                            if TdCS == True:
-                                if cb.prvI < cb.currI:
-                                    cb.currI *= 1. (+ cb.tau1 /100)
-                                else:
-                                    cb.currI /= 1. (+ cb.tau1 /100)
+                  #          if TdCS == True:
+                                
+           #                     if cb.prvI[0] < cb.currI[0]:
+            #                        cb.currI[0] *= 1. (+ cb.tau1 /100)
+            #                    else:
+            #                        cb.currI[0] /= 1. (+ cb.tau1 /100)
+             #                       
+             #                   if cb.prvI[1] < cb.currI[1]:
+             #                       cb.currI[1] *= 1. (+ cb.tau1 /100)
+             #                   else:
+             #                       cb.currI[1] /= 1. (+ cb.tau1 /100)
                              
                              
                             netOut = (K * bg.currActI) + ((1-K) * cb.damageI)    
@@ -834,7 +882,7 @@ if __name__ == "__main__":
                              
                             
                             
-                            if time > 0:        
+                            if step > 0:        
                                 bg.trainCrit()
                                 bg.trainAct()
                                 
@@ -867,13 +915,21 @@ if __name__ == "__main__":
                     
 
                 
-                    if bg.actRew != 0:
+                    if bg.actRew > 0:
                         epochAccurancy[trial%game.maxTrial] = 1.
                         epochGoalTime[trial%game.maxTrial] = step 
                         bg.performance[epoch%perfBuff,game.goalIdx] = 1.
-                        print trial, game.goalPos, step, bg.actRew 
+                        print trial, game.goalPos, step, bg.actRew, np.array([arm.theta1,arm.theta2])
                         bg.rewardCounter[game.goalIdx] +=1
                         break
+                    
+               #     if bg.actRew < 0:
+                #        epochAccurancy[trial%game.maxTrial] = 0.
+                 #       epochGoalTime[trial%game.maxTrial] = maxStep
+                   #     bg.performance[epoch%perfBuff,game.goalIdx] = 0.
+                    #    print trial, game.goalPos, step, bg.actRew, np.array([arm.theta1,arm.theta2])
+                    #    bg.rewardCounter[game.goalIdx] +=1
+                  #      break
                     
                     
                 if bg.actRew == 0:    

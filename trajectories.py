@@ -17,8 +17,8 @@ from games import armReaching6targets
 
 
 
-shoulderRange = np.array([-1.0, np.pi])
-elbowRange = np.array([0.0, np.pi ])
+shoulderRange = np.deg2rad(np.array([-30.0, 180.0]))
+elbowRange    = np.deg2rad(np.array([  0.0, 180.0])) 
 
 
 
@@ -26,25 +26,25 @@ CEREBELLUM = True
 INTRALAMINAR_NUCLEI = False
 
 ATAXIA = True
-damageMag = 20.0
+damageMag = 10.0
 
 
 
 
 actETA1 = 6.0 * 10 ** ( -1)
 actETA2 = 1.0 * 10 ** (- 3)
-critETA = 6.0 * 10 ** ( -5)
-cbETA   = 6.0 * 10 ** ( -1)
+critETA = 6.0 * 10 ** ( -6)
+cbETA   = 6.0 * 10 ** ( -2)
 
 
 
 goalRange = 0.03
 
 
-seed = 3
-maxEpoch = 1500
+seed = 0
+maxEpoch = 1000
 maxStep = 150
-startPlotting= 1459
+startPlotting= 950
 
 mydir = os.getcwd
 
@@ -121,8 +121,8 @@ if __name__ == "__main__":
        
             
             
-            ax1.set_xlim([-0.4,0.2])
-            ax1.set_ylim([ 0.1,0.5])
+            ax1.set_xlim([-0.4,0.05])
+            ax1.set_ylim([ 0.2,0.6])
             
             circle1 = plt.Circle((game.goalList[0]), goalRange, color = 'yellow') 
             edgecircle1 = plt.Circle((game.goalList[0]), goalRange, color = 'black', fill = False) 
@@ -326,8 +326,8 @@ if __name__ == "__main__":
                 text5.set_text("asimmetry index = %s" % (asimmetryIndex))
                 
                 ax1.cla()
-                ax1.set_xlim([-0.4,0.2])
-                ax1.set_ylim([ 0.1,0.5])
+                ax1.set_xlim([-0.4,0.05])
+                ax1.set_ylim([ 0.2,0.6])
                 
                 circle1 = plt.Circle((game.goalList[0]), goalRange, color = 'yellow') 
                 edgecircle1 = plt.Circle((game.goalList[0]), goalRange, color = 'black', fill = False) 
@@ -363,14 +363,14 @@ if __name__ == "__main__":
                 ax1.add_artist(rewardCircle)
         
         
-                traj = plt.Line2D(np.trim_zeros(trimmedTraj[0], 'b') , np.trim_zeros(trimmedTraj[1], 'b') , color = 'red')
+                traj = plt.Line2D(trimmedTraj[0] , trimmedTraj[1], color = 'red')
                 ax1.add_artist(traj)
                 
             
                    
-                linearVelocityPlot, = ax3.plot(np.trim_zeros(trialTangVel,'b'), color='blue')
+                linearVelocityPlot, = ax3.plot(trialTangVel, color='blue')
              #   linearAccellerationyPlot, = ax4.plot(np.trim_zeros(trialAccelleration, 'b'), color='blue')
-                linearJerkPlot, = ax5.plot(np.trim_zeros(trialTangJerk, 'b'), color='blue')
+                linearJerkPlot, = ax5.plot(trialTangJerk, color='blue')
                 
                 
                 

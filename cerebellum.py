@@ -14,13 +14,13 @@ class Cerebellum():
         
         
         
-        self.dT = 0.95
+        self.dT = 0.99
         self.tau  = 1.
         self.C1 = self.dT / self.tau
         self.C2 = 1. - self.C1
         
         # LEARNING
-        self.cbETA = 6.0 * 10 ** (-1) # 0.0025 SLOW # 0.025 fast
+        self.cbETA = 5.0 * 10 ** (-3) # 0.0025 SLOW # 0.025 fast
         
         # STATE
         self.currState = np.zeros(len(stateBg))
@@ -143,6 +143,9 @@ class Cerebellum():
         
     def spreading(self):
         self.currI = utils.sigmoid(self.currU)
+        
+    def spreadingtDCS(self, tDCSMag):
+        self.currI = utils.sigmoid2(self.currU,tDCSMag)
 
     
 #    def spreading(self,state):
@@ -153,4 +156,4 @@ class Cerebellum():
         self.trainU = self.C2 * self.prvTrainU + self.C1 * np.dot(self.w.T, state)
         self.trainI = utils.sigmoid(self.trainU)
         self.errorOut = gangliaI - self.trainI
-        self.w +=  self.cbETA * np.outer(state, self.errorOut) * self.trainI * (1. - self.trainI)
+        self.w +=  rew * self.cbETA * np.outer(state, self.errorOut) * self.trainI * (1. - self.trainI)
