@@ -48,7 +48,7 @@ MULTINET = False
 
 
 CEREBELLUM = True
-MOTOR_CORTEX = True
+MOTOR_CORTEX = False
 INTRALAMINAR_NUCLEI = False
 
 
@@ -104,7 +104,7 @@ maxSeed = 1
 maxEpoch = 1500
 maxStep = 150
 
-startPlotting = 1450
+startPlotting = 1500
 startAtaxia = 1460
 startTdCS = 1480
 
@@ -940,43 +940,71 @@ if __name__ == "__main__":
         
         if saveData == True:
             mydir = os.getcwd
-                   
-            if CEREBELLUM == True:
+            os.chdir('/home/adriano/Desktop/target6_2/data/')   
+            
+                        
+            if MOTOR_CORTEX == True and CEREBELLUM == True:
                 
-                
-                if INTRALAMINAR_NUCLEI == True:    
-                    
-                    if not os.path.exists("C:\Users/Alex/Desktop/targets6/data/intralaminarNuclei/actETA1=%s_actETA2=%s_critETA=%s_cbETA=%s/" % (bg.ACT_ETA1,bg.ACT_ETA2,bg.CRIT_ETA,cb.cbETA)):
-                        os.makedirs("C:\Users/Alex/Desktop/targets6/data/intralaminarNuclei/actETA1=%s_actETA2=%s_critETA=%s_cbETA=%s/" % (bg.ACT_ETA1,bg.ACT_ETA2,bg.CRIT_ETA,cb.cbETA))
-                    os.chdir("C:\Users/Alex/Desktop/targets6/data/intralaminarNuclei/actETA1=%s_actETA2=%s_critETA=%s_cbETA=%s/" % (bg.ACT_ETA1,bg.ACT_ETA2,bg.CRIT_ETA,cb.cbETA))
-                    
-                
-                else:
-                    if not os.path.exists("C:\Users/Alex/Desktop/targets6/data/onlyCerebellum/actETA1=%s_critETA=%s_cbETA=%s/" % (bg.ACT_ETA1,bg.CRIT_ETA,cb.cbETA)):
-                        os.makedirs("C:\Users/Alex/Desktop/targets6/data/onlyCerebellum/actETA1=%s_critETA=%s_cbETA=%s/" % (bg.ACT_ETA1,bg.CRIT_ETA,cb.cbETA))
-                    os.chdir("C:\Users/Alex/Desktop/targets6/data/onlyCerebellum/actETA1=%s_critETA=%s_cbETA=%s/" % (bg.ACT_ETA1,bg.CRIT_ETA,cb.cbETA))
-                
+                if not os.path.exists(os.curdir + "/fullsystem/actETA1=%s_actETA2=%s_critETA=%s_cbETA=%s_mtETA=%s/" % (bg.ACT_ETA1,bg.ACT_ETA2,bg.CRIT_ETA,cb.cbETA,mt.ETA)):
+                    os.makedirs(os.curdir + "/intralaminarNuclei/actETA1=%s_actETA2=%s_critETA=%s_cbETA=%s_mtETA=%s/" % (bg.ACT_ETA1,bg.ACT_ETA2,bg.CRIT_ETA,cb.cbETA,mt.ETA))
+                os.chdir(os.curdir + "/intralaminarNuclei/actETA1=%s_actETA2=%s_critETA=%s_cbETA=%s_mtETA=%s/" % (bg.ACT_ETA1,bg.ACT_ETA2,bg.CRIT_ETA,cb.cbETA,mt.ETA))
                 
                 if CEREBELLUM_DAMAGE == True:
                     if not os.path.exists(os.curdir + "/cerebellumDamage=" + str(damageMag)):
                         os.makedirs(os.curdir + "/cerebellumDamage=" + str(damageMag))
                     os.chdir(os.curdir + "/cerebellumDamage=" + str(damageMag))
                 
+                np.save("motorcortexweights" % (seed), (mt.w))
+                np.save("cerebellumWeights_seed=%s" % (seed), (cb.w))
+                np.save("gameTrialCerebAngles_seed=%s" % (seed), game.trialCerebAngles)
+                np.save("gameTrialmtxAngles_seed=%s" % (seed), game.trialmtxAngles)
+            
+            
+            
+            
+            
+            
+            elif MOTOR_CORTEX == True:
+                
+                if not os.path.exists(os.curdir + "/nocerebebellum/actETA1=%s_actETA2=%s_critETA=%s_mtETA=%s/" % (bg.ACT_ETA1,bg.ACT_ETA2,bg.CRIT_ETA,mt.ETA)):
+                    os.makedirs(os.curdir + "/nocerebebellum/actETA1=%s_actETA2=%s_critETA=%s_mtETA=%s/" % (bg.ACT_ETA1,bg.ACT_ETA2,bg.CRIT_ETA,mt.ETA))
+                os.chdir(os.curdir + "/nocerebebellum/actETA1=%s_actETA2=%s_critETA=%s_mtETA=%s/" % (bg.ACT_ETA1,bg.ACT_ETA2,bg.CRIT_ETA,mt.ETA))
+                
+                np.save("motorcortexweights" % (seed), (mt.w))
+                np.save("gameTrialmtxAngles_seed=%s" % (seed), game.trialmtxAngles)
+            
+            
+            
+            
+            
+            
+            elif CEREBELLUM == True:
+                
+                if not os.path.exists(os.curdir + "/nomotorcortex/actETA1=%s_actETA2=%s_critETA=%s_cbETA=%s/" % (bg.ACT_ETA1,bg.ACT_ETA2,bg.CRIT_ETA,cb.cbETA)):
+                    os.makedirs(os.curdir + "/nomotorcortex/actETA1=%s_actETA2=%s_critETA=%s_cbETA=%s/" % (bg.ACT_ETA1,bg.ACT_ETA2,bg.CRIT_ETA,cb.cbETA,))
+                os.chdir(os.curdir + "/nomotorcortex/actETA1=%s_actETA2=%s_critETA=%s_cbETA=%s/" % (bg.ACT_ETA1,bg.ACT_ETA2,bg.CRIT_ETA,cb.cbETA))    
+                
+                if CEREBELLUM_DAMAGE == True:
+                    if not os.path.exists(os.curdir + "/cerebellumDamage=" + str(damageMag)):
+                        os.makedirs(os.curdir + "/cerebellumDamage=" + str(damageMag))
+                    os.chdir(os.curdir + "/cerebellumDamage=" + str(damageMag))
                 
                 np.save("cerebellumWeights_seed=%s" % (seed), (cb.w))
                 np.save("gameTrialCerebAngles_seed=%s" % (seed), game.trialCerebAngles)
                 
                 
+                
+                
+                
             else:
-                if not os.path.exists("C:\Users/Alex/Desktop/targets6/data/onlyGanglia/actETA1=%s_critETA=%s/" % (bg.ACT_ETA1,bg.CRIT_ETA)):
-                    os.makedirs("C:\Users/Alex/Desktop/targets6/data/onlyGanglia/actETA1=%s_critETA=%s/" % (bg.ACT_ETA1,bg.CRIT_ETA))
-                os.chdir("C:\Users/Alex/Desktop/targets6/data/onlyGanglia/actETA1=%s_critETA=%s/" % (bg.ACT_ETA1,bg.CRIT_ETA))
+                if not os.path.exists(os.curdir + "/onlyGanglia/actETA1=%s_critETA=%s/" % (bg.ACT_ETA1,bg.CRIT_ETA)):
+                    os.makedirs(os.curdir + "/onlyGanglia/actETA1=%s_critETA=%s/" % (bg.ACT_ETA1,bg.CRIT_ETA))
+                os.chdir(os.curdir + "/onlyGanglia/actETA1=%s_critETA=%s/" % (bg.ACT_ETA1,bg.CRIT_ETA))
             
             
             
             np.save("actorWeights_seed=%s" % (seed), (bg.actW))
             np.save("criticWeights_seed=%s" % (seed), (bg.critW))
-        
         
             np.save("goalPositionHistory_seed=%s" % (seed), game.goalPositionHistory)
             np.save("goalAnglesHistory_seed=%s" % (seed), game.goalAnglesHistory)
@@ -986,7 +1014,7 @@ if __name__ == "__main__":
             np.save("gameTrajectories_seed=%s" % (seed), game.trialTrajectories)
             np.save("gameTrialArmAngles_seed=%s" % (seed), game.trialArmAngles)
             np.save("gameTrialGangliaAngles_seed=%s" % (seed), game.trialGangliaAngles)
-            
+                        
             
         #    np.save("gameVelocity_seed=%s" % (seed), game.trialVelocity)
         #    np.save("gameAccelleration_seed=%s" % (seed), game.trialAccelleration)
