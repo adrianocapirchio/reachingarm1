@@ -23,12 +23,12 @@ class armReaching6targets:
         
         
                             
-        self.goalList = [np.array([-0.07 -.10, 0.20 +0.06]),
-                         np.array([ 0.10 -.10, 0.20 +0.06]),
-                         np.array([-0.24 -.10, 0.20 +0.06]),
-                         np.array([-0.07 -.10, 0.46 +0.06]),        
-                         np.array([ 0.10 -.10, 0.46 +0.06]),
-                         np.array([-0.24 -.10, 0.46 +0.06])]
+        self.goalList = [np.array([-0.07 -.05, 0.16 +0.04]),
+                         np.array([ 0.10 -.05, 0.16 +0.04]),
+                         np.array([-0.24 -.05, 0.16 +0.04]),
+                         np.array([-0.07 -.05, 0.42 +0.04]),        
+                         np.array([ 0.10 -.05, 0.42 +0.04]),
+                         np.array([-0.24 -.05, 0.42 +0.04])]
         
         self.maxTrial = 7#len(self.goalList)
         
@@ -51,8 +51,11 @@ class armReaching6targets:
         
         self.trialArmAngles = np.zeros([2, maxStep, self.maxTrial, maxEpoch])
         self.goalAnglesHistory = np.zeros([2, maxStep, self.maxTrial, maxEpoch])
+        
         self.trialGangliaAngles = np.zeros([2, maxStep, self.maxTrial, maxEpoch])
         self.trialCerebAngles = np.zeros([2, maxStep, self.maxTrial, maxEpoch])
+        self.trialmtxAngles = np.zeros([2, maxStep, self.maxTrial, maxEpoch])
+        
         self.trialTrajectories = np.zeros([2, maxStep, self.maxTrial, maxEpoch])
         self.trialVelocity = np.zeros([maxStep, self.maxTrial, maxEpoch])
         self.trialAccelleration = np.zeros([maxStep, self.maxTrial, maxEpoch])

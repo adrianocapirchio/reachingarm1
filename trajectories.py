@@ -17,7 +17,7 @@ from games import armReaching6targets
 
 
 
-shoulderRange = np.deg2rad(np.array([-30.0, 180.0]))
+shoulderRange = np.deg2rad(np.array([-60.0, 150.0]))
 elbowRange    = np.deg2rad(np.array([  0.0, 180.0])) 
 
 
@@ -26,15 +26,15 @@ CEREBELLUM = True
 INTRALAMINAR_NUCLEI = False
 
 ATAXIA = True
-damageMag = 10.0
+damageMag = 1.2
 
 
 
 
-actETA1 = 6.0 * 10 ** ( -1)
-actETA2 = 1.0 * 10 ** (- 3)
-critETA = 6.0 * 10 ** ( -6)
-cbETA   = 6.0 * 10 ** ( -2)
+actETA1 = 5.0 * 10 ** ( -1)
+actETA2 = 5.0 * 10 ** (- 3)
+critETA = 5.0 * 10 ** ( -5)
+cbETA   = 5.0 * 10 ** ( -1)
 
 
 
@@ -121,8 +121,8 @@ if __name__ == "__main__":
        
             
             
-            ax1.set_xlim([-0.4,0.05])
-            ax1.set_ylim([ 0.2,0.6])
+            ax1.set_xlim([-0.7,0.5])
+            ax1.set_ylim([-0.2,0.8])
             
             circle1 = plt.Circle((game.goalList[0]), goalRange, color = 'yellow') 
             edgecircle1 = plt.Circle((game.goalList[0]), goalRange, color = 'black', fill = False) 
@@ -326,8 +326,8 @@ if __name__ == "__main__":
                 text5.set_text("asimmetry index = %s" % (asimmetryIndex))
                 
                 ax1.cla()
-                ax1.set_xlim([-0.4,0.05])
-                ax1.set_ylim([ 0.2,0.6])
+                ax1.set_xlim([-0.7,0.5])
+                ax1.set_ylim([-0.2,0.8])
                 
                 circle1 = plt.Circle((game.goalList[0]), goalRange, color = 'yellow') 
                 edgecircle1 = plt.Circle((game.goalList[0]), goalRange, color = 'black', fill = False) 

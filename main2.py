@@ -8,6 +8,7 @@ Created on Tue May 08 18:19:18 2018
 from arm import Arm
 from basalGanglia import actorCritic
 from cerebellum import Cerebellum 
+from motor_cortex import Motor_cortex
 from games import armReaching6targets
 
 
@@ -20,12 +21,12 @@ import os
 
 
 
-shoulderRange = np.deg2rad(np.array([-45.0, 180.0]))
+shoulderRange = np.deg2rad(np.array([-60.0, 150.0]))
 elbowRange    = np.deg2rad(np.array([  0.0, 180.0])) 
 
 
-xVisionRange = np.array([-0.4, 0.1]) 
-yVisionRange = np.array([ 0.2, 0.6]) 
+xVisionRange = np.array([-0.6, 0.4]) 
+yVisionRange = np.array([ 0.0, 1.0])  
 netGoalVision = np.zeros(2)
 netAgentVision = np.zeros(2)
 
@@ -38,9 +39,8 @@ netAgentVision = np.zeros(2)
 TRAINING = True
 GANGLIA_NOISE = True
 gangliaTime = 1
-epsi = 0.
-perfBuff = 100
-
+epsi = 0.0
+perfBuff = 400
 
 MULTINET = False
 
@@ -48,25 +48,19 @@ MULTINET = False
 
 
 CEREBELLUM = True
+MOTOR_CORTEX = True
 INTRALAMINAR_NUCLEI = False
 
 
 
 
 CEREBELLUM_DAMAGE = False
-damageMag = 10.0
+damageMag = 1.2
 TdCS = False
 TdCSMag = 1.2
 
 
 cerebellumTime = 1
-
-if CEREBELLUM == True:
-    K = 0.5
-else:
-    K = 1.
-
-
 
 
 
@@ -110,8 +104,7 @@ maxSeed = 1
 maxEpoch = 1500
 maxStep = 150
 
-startPlotting = 1500
-
+startPlotting = 1450
 startAtaxia = 1460
 startTdCS = 1480
 
@@ -158,7 +151,9 @@ if __name__ == "__main__":
             cb.init(MULTINET, game.goalList, bg.currState, maxStep)
             
             
-
+        if MOTOR_CORTEX == True:
+            mt = Motor_cortex()
+            mt.init(bg.goalVisionState)
 
 
 
@@ -224,6 +219,8 @@ if __name__ == "__main__":
             game.epochReset()
             game.currPos = np.array([arm.xEndEf,arm.yEndEf])  
             
+            if MOTOR_CORTEX == True:
+                mt.epochReset()
             
             
             if CEREBELLUM == True:
@@ -231,28 +228,8 @@ if __name__ == "__main__":
             
             
             netOut = np.ones(2) * 0.5
-            noisedOut = np.ones(2) * 0.5
-            prvNoisedOut = np.ones(2) * 0.5
             
             
-                            
-
-            xGangliaDes = utils.changeRange(bg.currActI[0], 0.,1.,shoulderRange[0],shoulderRange[1])
-            yGangliaDes = utils.changeRange(bg.currActI[1], 0.,1., elbowRange[0],  elbowRange[1])
-            
-            noiseDesAng = np.zeros(2)
-            
-            noiseDesAng[0] = utils.changeRange(bg.currNoise[0], 0.,1.,shoulderRange[0],shoulderRange[1])
-            noiseDesAng[1] = utils.changeRange(bg.currNoise[1], 0.,1.,shoulderRange[0],shoulderRange[1])
-            
-            noiseX = arm.L1*np.cos(noiseDesAng[0]) + arm.L2*np.cos(noiseDesAng[0]+noiseDesAng[1]) 
-            noiseY = arm.L1*np.sin(noiseDesAng[0]) + arm.L2*np.sin(noiseDesAng[0]+noiseDesAng[1])
-            
-            
-            if CEREBELLUM == True:
-                cerebDesAng = np.ones(2) * 0.5
-                cerebDesAng[0] = utils.changeRange(cb.currI[0], 0.,1.,shoulderRange[0],shoulderRange[1])
-                cerebDesAng[1] = utils.changeRange(cb.currI[1], 0.,1.,elbowRange[0],elbowRange[1])
             
             
             
@@ -273,7 +250,13 @@ if __name__ == "__main__":
             xGangliaDes = arm.L1*np.cos(gangliaDesAng[0]) + arm.L2*np.cos(gangliaDesAng[0]+gangliaDesAng[1])
             yGangliaDes = arm.L1*np.sin(gangliaDesAng[0]) + arm.L2*np.sin(gangliaDesAng[0]+gangliaDesAng[1])
             
-            
+            if MOTOR_CORTEX == True:
+                mtxDesAng = np.ones(2) * 0.5
+                mtxDesAng[0] = utils.changeRange(mt.currI[0], 0.,1.,shoulderRange[0],shoulderRange[1])
+                mtxDesAng[1] = utils.changeRange(mt.currI[1], 0.,1.,elbowRange[0],elbowRange[1])    
+                
+                xmtxDes = arm.L1*np.cos(mtxDesAng[0]) + arm.L2*np.cos(mtxDesAng[0]+mtxDesAng[1])
+                ymtxDes = arm.L1*np.sin(mtxDesAng[0]) + arm.L2*np.sin(mtxDesAng[0]+mtxDesAng[1])
             
             if CEREBELLUM == True:
                 cerebDesAng = np.ones(2) * 0.5
@@ -296,14 +279,17 @@ if __name__ == "__main__":
                 text4 = plt.figtext(.02, .42, "reward = %s" % (0), style='italic', bbox={'facecolor':'lightgreen'})
                 
                 
-                ax1    = fig1.add_subplot(111)
+                ax1    = fig1.add_subplot(111, aspect='equal')
                 
                 line1, = ax1.plot([0, arm.xElbow, arm.xEndEf], [0, arm.yElbow, arm.yEndEf], 'k-', color = 'pink', linewidth = 10)
                 point, = ax1.plot([arm.xEndEf], [arm.yEndEf], 'o', color = 'black' , markersize= 20)
+                
                 desEnd, = ax1.plot([xDesAng], [yDesAng], 'o', color = 'green' , markersize= 10)
                 gangliaOut, = ax1.plot([xGangliaDes], [yGangliaDes], 'o', color = 'blue' , markersize= 10)
             #    noiseEnd, = ax1.plot([noiseX], [noiseY], 'o', color = 'green' , markersize= 10)
                 
+                if MOTOR_CORTEX ==True:
+                    cortexOut, = ax1.plot([xmtxDes], [ymtxDes], 'o', color = 'darkblue' , markersize= 10)
             
                 if CEREBELLUM == True:
                     cerebOut, = ax1.plot([xCerebDes], [yCerebDes], 'o', color = 'orange' , markersize= 10)
@@ -312,8 +298,8 @@ if __name__ == "__main__":
                 visionLimit = patches.Rectangle(np.array([xVisionRange[0], yVisionRange[0]]), np.sqrt((xVisionRange[0] - xVisionRange[1])**2), np.sqrt((yVisionRange[0] - yVisionRange[1])**2) ,linewidth=1,edgecolor='black',facecolor='lightgrey')
                 ax1.add_patch(visionLimit)
                 
-                ax1.set_xlim([-0.75,0.75])
-                ax1.set_ylim([-0.5,0.75])
+                ax1.set_xlim([-1.0,1.0])
+                ax1.set_ylim([-1.0,1.0])
                 
                 circle1 = plt.Circle((game.goalList[0]), goalRange, color = 'yellow') 
                 edgecircle1 = plt.Circle((game.goalList[0]), goalRange, color = 'black', fill = False) 
@@ -364,7 +350,7 @@ if __name__ == "__main__":
             for trial in xrange(game.maxTrial):
                 
                 
-                
+
                 
                 
                 bg.trialReset(maxStep, cerebellumTime)
@@ -384,7 +370,7 @@ if __name__ == "__main__":
                 
                 
                 game.setGoal(trial)
-                game.goalIndex0(trial)
+                game.goalIndex1(trial)
               #  print trial, game.goalPos
               #  print game.goalIdx
                 
@@ -416,13 +402,13 @@ if __name__ == "__main__":
                         
                 
                 
-          #      if epoch < perfBuff:    
-          #          T = 1.0 
-          #      else:
-                T = (1.0 - (np.sum(bg.performance[:, game.goalIdx]) / perfBuff))
-                    
-             #   T = 1 * utils.clipped_exp(- epoch / float(maxEpoch))    
-                    
+                if epoch < perfBuff:    
+                     T = 1.0 
+                else:
+                     T = (1.0 - (np.sum(bg.performance[:, game.goalIdx]) / perfBuff))
+              #   T = 1 * np.exp(- trial   * 0.1 / float(n_trial))    
+               # T = 1. * utils.clipped_exp((-np.sum(bg.performance[:, game.goalIdx]) / perfBuff) * 10.0)    
+               # print T, (np.sum(bg.performance[:, game.goalIdx]) / perfBuff) * 10.0   
           #      T = 1.0 - float(epoch)/maxEpoch    
                     
                 if VISION == True:
@@ -518,31 +504,28 @@ if __name__ == "__main__":
 
 
 
-
+                    gangliaDesAng[0] = utils.changeRange(bg.currActI[0], 0.,1.,shoulderRange[0],shoulderRange[1])
+                    gangliaDesAng[1] = utils.changeRange(bg.currActI[1], 0.,1., elbowRange[0],elbowRange[1])
 
                     
                     if CEREBELLUM == True:
+                        
                         if CEREBELLUM_DAMAGE == False:
-                            
-                            gangliaDesAng[0] = utils.changeRange(bg.currActI[0], 0.,1.,shoulderRange[0],shoulderRange[1])
-                            gangliaDesAng[1] = utils.changeRange(bg.currActI[1], 0.,1., elbowRange[0],elbowRange[1]) 
-                            
-                            
-                            
+
                             cerebDesAng[0] = utils.changeRange(cb.currI[0], 0.,1.,shoulderRange[0],shoulderRange[1])
                             cerebDesAng[1] = utils.changeRange(cb.currI[1], 0.,1., elbowRange[0],elbowRange[1])
                             
                         else:
-                            
-                            gangliaDesAng[0] = utils.changeRange(bg.currActI[0] , 0.,1.,shoulderRange[0],shoulderRange[1])
-                            gangliaDesAng[1] = utils.changeRange(bg.currActI[1] , 0.,1., elbowRange[0],elbowRange[1]) 
-                            
+
                             cerebDesAng[0] = utils.changeRange(cb.damageI[0], 0.,1.,shoulderRange[0],shoulderRange[1])
                             cerebDesAng[1] = utils.changeRange(cb.damageI[1], 0.,1., elbowRange[0],elbowRange[1])
-                                            
-                    else:
-                        gangliaDesAng[0] = utils.changeRange(bg.currActI[0], 0.,1.,shoulderRange[0],shoulderRange[1])
-                        gangliaDesAng[1] = utils.changeRange(bg.currActI[1], 0.,1., elbowRange[0],elbowRange[1]) 
+                            
+                    if MOTOR_CORTEX == True:  
+                        
+                        mtxDesAng[0] = utils.changeRange(mt.currI[0], 0.,1.,shoulderRange[0],shoulderRange[1])
+                        mtxDesAng[1] = utils.changeRange(mt.currI[1], 0.,1., elbowRange[0],elbowRange[1])
+
+                         
         
     
 
@@ -570,11 +553,14 @@ if __name__ == "__main__":
                         game.trialArmAngles[:,step,trial,epoch] = np.array([arm.theta1,arm.theta2])
                         game.trialGangliaAngles[:,step,trial,epoch]  = gangliaDesAng.copy()
                         
+                        if MOTOR_CORTEX == True:
+                            game.trialmtxAngles[:,step,trial,epoch] = mtxDesAng.copy()
+                        
                         if CEREBELLUM == True:
                             game.trialCerebAngles[:,step,trial,epoch] = cerebDesAng.copy() 
+                           # print (game.trialCerebAngles[:,step,trial,epoch] == cerebDesAng).all()
                         
-                        
-                    #    game.trialVelocity[step,trial,epoch] = game.currVel.copy()
+                    #    game.trialVelocity[steptrial,epoch] = game.currVel.copy()
                     #    game.trialAccelleration[step,trial,epoch] = game.currAcc.copy()
                         game.trialJerk[step,trial,epoch] = game.currJerk.copy()  
                         
@@ -598,17 +584,17 @@ if __name__ == "__main__":
                         desEnd.set_data([xDesAng],[yDesAng])
                                               
                         
-            
                         xGangliaDes = arm.L1*np.cos(gangliaDesAng[0]) + arm.L2*np.cos(gangliaDesAng[0]+gangliaDesAng[1])
                         yGangliaDes = arm.L1*np.sin(gangliaDesAng[0]) + arm.L2*np.sin(gangliaDesAng[0]+gangliaDesAng[1])
                         gangliaOut.set_data( [xGangliaDes] , [yGangliaDes] )
                         
-                        noiseDesAng[0] = utils.changeRange(bg.currNoise[0], 0.,1.,shoulderRange[0],shoulderRange[1])
-                        noiseDesAng[1] = utils.changeRange(bg.currNoise[1], 0.,1.,elbowRange[0],elbowRange[1])
-            #
-                        noiseX = arm.L1*np.cos(noiseDesAng[0]) + arm.L2*np.cos(noiseDesAng[0]+noiseDesAng[1]) 
-                        noiseY = arm.L1*np.sin(noiseDesAng[0]) + arm.L2*np.sin(noiseDesAng[0]+noiseDesAng[1])
-
+                        
+                        if MOTOR_CORTEX == True:
+                            xmtxDes = arm.L1*np.cos(mtxDesAng[0]) + arm.L2*np.cos(mtxDesAng[0]+mtxDesAng[1])
+                            ymtxDes = arm.L1*np.sin(mtxDesAng[0]) + arm.L2*np.sin(mtxDesAng[0]+mtxDesAng[1])
+                            cortexOut.set_data([xmtxDes], [ymtxDes])
+                            
+            
                         
                         if CEREBELLUM == True:
                             xCerebDes = arm.L1*np.cos(cerebDesAng[0]) + arm.L2*np.cos(cerebDesAng[0]+cerebDesAng[1])
@@ -665,52 +651,14 @@ if __name__ == "__main__":
                         
                         
                         
-                        if trial == 1:
+                        if trial == 1 or trial == 3 or trial == 5:
                             
                             if step > 0:
                                 if bg.prvRew == 1:
                           #      bg.prvprvRew = 1
                                     bg.actRew = np.e**(-epsi * game.currVel)
-            #                       #     bg.spreadCrit()
+            #                        #     bg.spreadCrit()
                                     bg.currCritOut = np.zeros(1)
-                        #    else:
-                        #        if step > 0:
-                        #            if bg.prvRew == 1:
-                           #         bg.prvprvRew = 1
-                        #                bg.actRew = 1  
-            #                   #     bg.spreadCrit()
-                        #                bg.currCritOut = np.zeros(1)
-                        elif trial == 3 :
-                            if step > 0:
-                                if bg.prvRew == 1:
-                          #      bg.prvprvRew = 1
-                                    bg.actRew =  np.e**(-epsi * game.currVel)
-                            #    print bg.actRew
-                              #      bg.spreadCrit()  
-                                    bg.currCritOut = np.zeros(1)
-                        
-                        
-                        
-                        
-                                            
-                        elif trial == 5 :
-                            if step > 0:
-                                if bg.prvRew == 1:
-                                #bg.prvprvRew = 1
-                                    bg.actRew =  np.e**(-epsi* game.currVel) 
-                            #    print bg.actRew
-                              #      bg.spreadCrit()
-                                    bg.currCritOut = np.zeros(1)
-                        
-                        elif trial == 2 or trial == 4 or trial == 6 :
-                            if step > 0:
-                      #          if bg.prvprvRew == 1:
-                                bg.prvRew = 1
-                                bg.actRew =  np.e**(-epsi* game.currVel)
-                            #    print bg.actRew
-                              #      bg.spreadCrit()
-                                bg.currCritOut = np.zeros(1)
-                        
                         
                         else:
                             if step > 0:
@@ -722,6 +670,9 @@ if __name__ == "__main__":
                                 bg.currCritOut = np.zeros(1)
                                 
                                 
+                    elif step == maxStep -1:
+                        
+                        bg.currCritOut = np.zeros(1)
                     
                     else:
                         
@@ -736,6 +687,9 @@ if __name__ == "__main__":
                #         print bg.surp
 
                     
+               
+               
+               
                     if epoch > startPlotting:
                     #    print "actor out", bg.currActOut
                         print "critic out", type(bg.currCritOut), bg.currCritOut , "surp", bg.surp 
@@ -744,14 +698,15 @@ if __name__ == "__main__":
                     if bg.actRew > 0:
                         arm.stopMove() 
                     
-                                                
+                    
+                    
+                    
+                    
+                    
+                            
                                                 
                     bg.compU()                            
                     bg.spreadAct()       
-                    
-               #     bg.leakedOut = utils.limitRange(bg.actorC2 * bg.leakedOut + bg.actorC1 * bg.currActOut, 0.0, 1.0)
-                    
-                    
                     
                     if GANGLIA_NOISE== True:
                         if epoch < startAtaxia:
@@ -761,82 +716,61 @@ if __name__ == "__main__":
                     
                     
                     
+                    
+                    
+                    if MOTOR_CORTEX == True:
+                        mt.compU(bg.goalVisionState)
+                        mt.compI()
+                    
+                    
+                    
+                    
+                    
                     if CEREBELLUM == True:
                         
-                       # cb.prvI = cb.currI.copy()
-                     #   cb.compU(bg.currState)
-                     #   cb.spreading()
-                        cb.compU(bg.currState)   
-                                          
+                        cb.compU(bg.currState)
+                        
+                        
+
                         if CEREBELLUM_DAMAGE == False:
-                            
+                #            cb.tau = 1.0
+                #            cb.C1 = cb.dT / cb.tau
+                #            cb.C2 = 1. - cb.C1
                             
                             cb.spreading()
-
-                 #           cb.currI = utils.limitRange(cb.C2 * cb.leakedOut + cb.C1 * cb.currOut, 0.0, 1.0)
-                            
-                            netOut = (K * bg.currActI) + ((1-K) * cb.currI)
                  
                         else:
                             
-                            
-                            if TdCS == False:
-                                
+                            if TdCS == False:                   
                                 cb.spreading()
-                                
-                                cb.tau1 =  np.random.normal(damageMag, (damageMag -1) /2)
+                            else:                                 
+                                cb.spreadingtDCS(TdCSMag) 
+                    
+                            cb.tau1 =  np.random.normal(0.0, (damageMag -1))                           
+                            if cb.tau1 < 1.0:
+                                cb.tau1 = 1.0
                             
-                                if cb.tau1 < 1.:
-                                    cb.tau1 = 1.
-                     #       print cb.tau1
-                       #     cb.tau = copy.deepcopy(damageMag)
-                        #    cb.C1 = cb.dT / cb.tau
-                        #    cb.C2 = 1. - cb.C1
-                       #     print cb.currI
-                                cb.damageI = (1. - (1./ cb.tau1)) * cb.damageI + (1./cb.tau1) * cb.currI
-                                             
+                            cb.damageI = (1.0 - cb.dT / cb.tau1) * cb.damageI + (cb.dT / cb.tau1) * cb.currI
+
                             
-                            else:
-                                 
-                                cb.tau1 =  np.random.normal(damageMag, (damageMag -1) /2) 
-                                
-                                cb.spreadingtDCS(cb.tau1) 
-                                
-                                
-                                
-                                if cb.tau1 < 1.:
-                                    cb.tau1 = 1.
-                                    
-                                cb.damageI = (1. - (1./ cb.tau1)) * cb.damageI + (1./cb.tau1) * cb.currI
-                      #      print cb.damageI
-                  #          if TdCS == True:
-                                
-           #                     if cb.prvI[0] < cb.currI[0]:
-            #                        cb.currI[0] *= 1. (+ cb.tau1 /100)
-            #                    else:
-            #                        cb.currI[0] /= 1. (+ cb.tau1 /100)
-             #                       
-             #                   if cb.prvI[1] < cb.currI[1]:
-             #                       cb.currI[1] *= 1. (+ cb.tau1 /100)
-             #                   else:
-             #                       cb.currI[1] /= 1. (+ cb.tau1 /100)
-                             
-                             
-                            netOut = (K * bg.currActI) + ((1-K) * cb.damageI)    
-                              #  
+                    
                             
-                           # ataxiaNoise = np.random.normal(0.0, 0.01, 2)
-                 #           print ataxiaNoise
-                 #           cb.leakedOut = utils.limitRange(cb.C2 * cb.leakedOut + cb.C1 * cb.currOut, 0.0, 1.0)  
+                    if MOTOR_CORTEX == True and CEREBELLUM == True:
                         
-                         
-                            
-                            
-                        
-                        
-            
+                        K = 1./3                          
+                        if CEREBELLUM_DAMAGE == False:                            
+                            netOut = K * bg.currActI + K* mt.currI + K* cb.currI
+                        else:
+                            netOut = K * bg.currActI + K* mt.currI + K* cb.damageI
+                    
+                    elif CEREBELLUM == True:
+                        K = 1./2
+                        if CEREBELLUM_DAMAGE == False:    
+                            netOut = K * bg.currActI + K* cb.currI
+                        else:
+                            netOut = K * bg.currActI + K* cb.damageI
                     else:
-                        
+                        K = 1
                         netOut = K * bg.currActI
 
 
@@ -858,7 +792,7 @@ if __name__ == "__main__":
                     
                     if CEREBELLUM == True:
                             
-                        bg.netOutBuff[:,step] = bg.currActI.copy()
+                        bg.netOutBuff[:,step] = netOut.copy()
                         bg.stateBuff[:,step] = bg.currState.copy()
                         
                         if INTRALAMINAR_NUCLEI == True:
@@ -874,12 +808,16 @@ if __name__ == "__main__":
                         if CEREBELLUM_DAMAGE == False:
                         
                             if CEREBELLUM == True: 
-                                if (bg.actRew != 0):                           
+                                if (bg.actRew > 0):  
                                     for i in xrange(step + 1): 
                                         cb.trainCb(bg.stateBuff[:,i], bg.netOutBuff[:,i], bg.actRew)
                                         if INTRALAMINAR_NUCLEI == True:
                                             bg.trainAct2(bg.stateBuff[:,i], cb.desOutBuff[:,i], bg.desOutBuff[:,i])
                              
+                            
+                            if MOTOR_CORTEX == True:
+                                if (bg.actRew > 0):
+                                    mt.training(bg.goalVisionState, netOut, bg.actRew)
                             
                             
                             if step > 0:        
@@ -919,8 +857,9 @@ if __name__ == "__main__":
                         epochAccurancy[trial%game.maxTrial] = 1.
                         epochGoalTime[trial%game.maxTrial] = step 
                         bg.performance[epoch%perfBuff,game.goalIdx] = 1.
-                        print trial, game.goalPos, step, bg.actRew, np.array([arm.theta1,arm.theta2])
-                        bg.rewardCounter[game.goalIdx] +=1
+                        
+                        print trial, game.goalPos, step, bg.actRew, np.array([arm.theta1,arm.theta2]), np.round(np.sum(bg.performance[:, game.goalIdx]) / perfBuff , 2)
+                        
                         break
                     
                #     if bg.actRew < 0:

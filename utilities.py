@@ -52,10 +52,13 @@ def clipped_exp(x):
     return np.exp(cx)
 
 def sigmoid(x):
-    return 1 / (1.0 + clipped_exp(-(2.0*x)))
+    return 1 / (1.0 + np.e**(-(1.0*x)))
 
-def sigmoid2(x, tDCSMag):
-    return 1 / (1.0 + clipped_exp(-(tDCSMag*x)))
+def sigmoid2(x):
+    return 1 / (1.0 + np.e**(-(1.0*x)))
+
+def sigmoidtDCS(x, tDCSMag):
+    return 1 / (1.0 + np.e**(-(tDCSMag*x)))
 
 
 
@@ -247,9 +250,28 @@ def smoothnessIndex1(jerkPath, distance):
     
     return logJ2int
 
+
+def grid_2D(x0,x1,y0,y1,xN,yN):
+    rawGrid = np.meshgrid(np.linspace(x0,x1,xN),np.linspace(y0,y1,yN))
+    grid = np.vstack(([rawGrid[0].T],[rawGrid[1].T])).T
+    return grid
+
+def angfrompos(arml, forarml, endeffX, endeffY, shoRange , elbRange):
+    r2     = 0.0
+    r      = 0.0
+    Beta   = 0.0
     
+    r2 = pow(endeffX,2) + pow(endeffY,2)
+    r = np.sqrt(r2)
     
+    theta2 = 3.14159 - np.arccos( (r2 - pow(arml,2) - pow(forarml,2) ) / ( (-2.0) * arml * forarml))
+    Beta = np.arccos(( pow(forarml,2) - pow(arml,2) - r2) / (-2.0 * arml * r))
+    theta1 = np.arctan2(endeffY, endeffX) - Beta
+                       
+    normTheta2 = changeRange(theta2, elbRange[0], elbRange[1], 0.0 , 1.0)
+    normTheta1 = changeRange(theta1, shoRange[0], shoRange[1], 0.0 , 1.0)
     
+    return np.array([normTheta1, normTheta2]), np.array([theta1, theta2])  
     
     
     

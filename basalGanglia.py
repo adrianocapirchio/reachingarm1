@@ -14,9 +14,9 @@ class actorCritic:
     
     def init(self, MULTINET, VISION, GOAL_VISION , AGENT_VISION, PROPRIOCEPTION, ELBOW_PROPRIOCEPTION, SHOULDER_PROPRIOCEPTION, maxStep, maxTrial, goalList, perfBuff, cerebellumTime, DOF = 2):
 
-        self.noiseMag0 = 0.75#51.0
-        self.noiseMag1 = 0.75#1.0
-        
+        self.noiseMag0 = 1.
+        self.noiseMag1 = 1.
+    
         
         self.DELTM1 =  0.12
         self.TAU = 1.0 
@@ -33,15 +33,15 @@ class actorCritic:
         self.actorC2 = 1. - self.actorC1
         
         
-    
+
         # LEARNING PARAMETERS
         self.ACT_ETA1 = 5.0 * 10 ** (   -1) #1.0 * 10 ** (   -1)
-        self.ACT_ETA2 = 1.0 * 10 ** (   -4)#1.0 * 10 ** (   -3)
-        self.CRIT_ETA = 5.0 * 10 ** (   -6)  #1.0 * 10 ** (   -4)
+        self.ACT_ETA2 = 5.0 * 10 ** (   -1)#1.0 * 10 ** (   -3)
+        self.CRIT_ETA = 5.0 * 10 ** (   -5)  #1.0 * 10 ** (   -4)
         
         self.DISC_FACT = 0.99 # 0.99
 
-        self.n = 21
+        self.n = 41
         
      #   self.bias = np.ones(1)
         self.currState = np.array([])
@@ -50,11 +50,11 @@ class actorCritic:
             self.proprioceptionState = np.array([])
             
         
-            self.proprioceptionInputUnits = 21**2
+            self.proprioceptionInputUnits = self.n**2
             self.intervalsProprioception = int(np.sqrt(self.proprioceptionInputUnits)) -1
-            self.sigmaProprioception = (1. / ((self.intervalsProprioception +1) * 2 ))
+            self.sigmaProprioception = 1. / ((self.intervalsProprioception) * 2)
        #     self.proprioceptionGrid = utils.build2DGrid(self.intervalsProprioception +1, 0., 1.)
-            self.proprioceptionGrid = utils.build2DGrid(self.intervalsProprioception +1, 0., 1.).reshape(2,self.proprioceptionInputUnits)
+            self.proprioceptionGrid = utils.buildGrid(0.0, 1.0, self.n, 0.0, 1.0, self.n).reshape(2,self.proprioceptionInputUnits)
           #  self.proprioceptionRawState = np.zeros([self.intervalsProprioception +1,self.intervalsProprioception +1])
             self.proprioceptionState = np.zeros(self.proprioceptionInputUnits) #self.proprioceptionRawState.ravel()
             
@@ -95,7 +95,7 @@ class actorCritic:
             if GOAL_VISION == True:
                 self.goalVisionInputUnits = self.n**2 #201
                 self.goalVisionIntervals = int(np.sqrt(self.goalVisionInputUnits)) -1               
-                self.goalVisionSig= (1. / ((self.goalVisionIntervals +1) * 2))
+                self.goalVisionSig= 1. / ((self.goalVisionIntervals)* 2)
                # self.goalVisionGrid = utils.build2DGrid(self.goalVisionIntervals +1, 0., 1.)
                 self.goalVisionGrid = utils.buildGrid(0.0,1.0,self.n,0.0,1.0,self.n).reshape(2,self.goalVisionInputUnits)
               #  self.goalVisionGrid = utils.build2DGrid(self.goalVisionIntervals +1, 0., 1.).reshape(2,self.goalVisionInputUnits)
@@ -105,11 +105,11 @@ class actorCritic:
              #   self.visionState = np.zeros(self.goalVisionInputUnits)
                 
             if AGENT_VISION == True:
-                self.agentVisionInputUnits = 21**2
+                self.agentVisionInputUnits = self.n**2
                 self.agentVisionIntervals = int(np.sqrt(self.agentVisionInputUnits)) -1               
-                self.agentVisionSig= (1. / ((self.agentVisionIntervals +1) * 2 * np.sqrt(2)))
+                self.agentVisionSig= 1. / ((self.agentVisionIntervals)* 2)
              #   self.agentVisionGrid = utils.build2DGrid(self.agentVisionIntervals +1, 0., 1.)
-                self.agentVisionGrid = utils.buildGrid(0.0,1.0,21,0.0,1.0,21).reshape(2,self.agentVisionInputUnits)
+                self.agentVisionGrid = utils.buildGrid(0.0,1.0,self.n,0.0,1.0,self.n).reshape(2,self.agentVisionInputUnits)
                 #self.agentVisionGrid = utils.build2DGrid(self.agentVisionIntervals +1, 0., 1.).reshape(2,self.agentVisionInputUnits)
             #    self.agentVisionRawState = np.zeros([self.agentVisionIntervals +1,self.agentVisionIntervals +1])
                 self.agentVisionState = np.zeros(self.agentVisionInputUnits)
@@ -324,10 +324,6 @@ class actorCritic:
     def spreadAct(self):
         self.currActI = utils.sigmoid(self.currActU)
                      
-
-
-#    def spreadAct(self):
-#        self.currActOut = utils.sigmoid(np.dot(self.actW.T, self.currState))
                          
     def spreadCrit(self): 
         self.currCritOut = self.actorC2 * self.prvCritOut + self.actorC1 * np.dot(self.critW, self.currState)
@@ -348,7 +344,7 @@ class actorCritic:
         self.critW += self.CRIT_ETA * self.surp * self.prvState
         
     def trainAct(self):    
-        self.actW += self.surp * self.ACT_ETA1 * np.outer(self.prvState, self.prvLeakedNoise) * self.prvActI * (1.- self.prvActI)
+        self.actW += self.ACT_ETA1 * self.surp * self.prvActI * (1.- self.prvActI) * np.outer(self.prvState, self.prvLeakedNoise) 
                                
     def trainAct2(self, state, cerebOut, gangliaOut):
         self.actW += self.ACT_ETA2 * np.outer(state, (cerebOut- gangliaOut)) * gangliaOut * (1. - gangliaOut)

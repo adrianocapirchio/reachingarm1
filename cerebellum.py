@@ -20,7 +20,7 @@ class Cerebellum():
         self.C2 = 1. - self.C1
         
         # LEARNING
-        self.cbETA = 5.0 * 10 ** (-3) # 0.0025 SLOW # 0.025 fast
+        self.cbETA = 5.0 * 10 ** (-1) # 0.0025 SLOW # 0.025 fast
         
         # STATE
         self.currState = np.zeros(len(stateBg))
@@ -105,7 +105,7 @@ class Cerebellum():
       #  self.prvOut = np.ones(DOF) * 0.5
                              
                              
-      #  self.desOutBuff = np.ones([DOF , maxStep])* 0.5
+        self.desOutBuff = np.ones([DOF , maxStep])* 0.5
         
       #  self.estVision *= 0.
       #  self.estVisionDistance *=0
@@ -135,7 +135,7 @@ class Cerebellum():
         self.errorOut = np.zeros(2)
         
         
-      #  self.desOutBuff = np.ones([DOF , maxStep])* 0.5  
+        self.desOutBuff = np.ones([DOF , maxStep])* 0.5  
       
     
     def compU(self, state):
@@ -156,4 +156,4 @@ class Cerebellum():
         self.trainU = self.C2 * self.prvTrainU + self.C1 * np.dot(self.w.T, state)
         self.trainI = utils.sigmoid(self.trainU)
         self.errorOut = gangliaI - self.trainI
-        self.w +=  rew * self.cbETA * np.outer(state, self.errorOut) * self.trainI * (1. - self.trainI)
+        self.w += rew * self.cbETA * np.outer(state, self.errorOut) * self.trainI * (1. - self.trainI)
